@@ -1,0 +1,16 @@
+{
+  "name": "Archive-It Page Checker",
+  "version": "1.0",
+  "permissions": ["activeTab", "tabs"],
+  "manifest_version": 3,
+  "description": "This is a Chrome extension to QA Archive-It pages on the fly",
+  "icons": {
+    "128": "icon128.png",
+    "48": "icon48.png",
+    "16": "icon16.png"
+  },
+  "action": {
+    "default_icon": "icon16.png",
+    "default_popup": "popup.html"
+  }
+}
