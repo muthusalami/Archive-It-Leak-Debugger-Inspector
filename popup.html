@@ -5,10 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Archive-It Page Checker</title>
     <script src="jquery-3.7.1.min.js"></script>
-    <script src="checker.js"></script>
+    <script src="display.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
   <body>
     <input type="text" id="urlDisplay" style="width: 100%" readonly />
+    <h1>LEAKS: <span id="total">0</span></h1>
+    <div>
+      <input type="checkbox" id="checkboxConsoleLog" value="consoleLog" />
+      Console Logs<br />
+      <input type="checkbox" id="checkboxHARLog" value="HARLog" /> HAR log<br />
+      <br />
+      <input type="submit" id="whatToCapture" value="Get Snapshot" />
+    </div>
   </body>
 </html>
