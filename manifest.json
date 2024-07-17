@@ -4,18 +4,20 @@
   "permissions": [
     "activeTab",
     "background",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
     "debugger",
     "downloads",
     "notifications",
     "tabs",
+    "scripting",
     "storage",
-    "webRequest",
-    "*://*/*",
-    "<all_urls>"
+    "webRequest"
   ],
   "manifest_version": 3,
   "devtools_page": "devtools.html",
   "description": "This is a Chrome extension to QA Archive-It pages on the fly.",
+  "options_page": "options.html",
   "icons": {
     "128": "icon128.png",
     "48": "icon48.png",
@@ -26,7 +28,6 @@
     "default_popup": "popup.html"
   },
   "background": {
-    "service_worker": "background.js",
-    "persistent": true
+    "service_worker": "background.js"
   }
 }
