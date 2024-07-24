@@ -53,6 +53,8 @@ function checkAndSetupWebRequest(tabId, changeInfo, tab) {
         urls: ["<all_urls>"],
       });
     }
+  } else if (!tab.url) {
+    console.log("Tab URL is not valid:", tab.url);
   } else {
     console.log("URL does not start with Wayback prefix:", tab.url);
   }
