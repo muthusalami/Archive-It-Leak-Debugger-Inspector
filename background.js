@@ -14,6 +14,18 @@ chrome.storage.local.get(["leakCount", "processedUrls"], (result) => {
   const storedUrls = result.processedUrls || [];
   storedUrls.forEach((url) => processedUrls.add(url));
   console.log("Initialized storage:", { leakCount, processedUrls });
+  chrome.action.setBadgeText({ text: leakCount.toString() });
+});
+
+chrome.storage.onChanged.addListener(function (changes, areaName) {
+  if (changes.leakCount) {
+    chrome.action.setBadgeText({ text: changes.leakCount.newValue.toString() });
+  }
+});
+
+chrome.storage.local.get(["leakCount"], (result) => {
+  let initialLeakCount = result.leakCount || 0;
+  chrome.action.setBadgeText({ text: initialLeakCount.toString() });
 });
 
 // saves leak count and processed network links locally
@@ -25,6 +37,7 @@ function saveToStorage() {
     },
     () => {
       console.log("Leak count saved to storage");
+      chrome.action.setBadgeText({ text: leakCount.toString() });
     }
   );
 }
@@ -62,6 +75,7 @@ function checkAndSetupWebRequest(tabId, changeInfo, tab) {
                 "Tab ID:",
                 details.tabId
               );
+              chrome.action.setBadgeText({ text: leakCount.toString() });
               saveToStorage();
             }
           }
@@ -89,6 +103,8 @@ function clearProcessedUrls(tabId, removeInfo) {
     console.log("Processed URLs after clearing:", processedUrls);
     leakCount = 0;
     console.log("Leak count reset to:", leakCount);
+
+    chrome.action.setBadgeText({ text: leakCount.toString() });
 
     // reset state
     saveToStorage();
