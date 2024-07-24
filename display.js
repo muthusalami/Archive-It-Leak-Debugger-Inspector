@@ -8,3 +8,13 @@ $(function () {
     $("#urlDisplay").val(currentUrl);
   });
 });
+
+$(function () {
+  chrome.storage.local.get("leakCount", function (result) {
+    var leakCount = result.leakCount || 0;
+    console.log("Leak count retrieved from storage:", leakCount);
+
+    // updates span element with the retrieved leak count
+    $("#total").text(leakCount);
+  });
+});
