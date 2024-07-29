@@ -15,11 +15,26 @@ chrome.storage.local.get(["processedUrls"], (result) => {
   console.log("Initialized storage:", { processedUrls });
 });
 
+// initialize badge with leak count
+chrome.storage.local.get([`leakCount_${currentTabId}`], (result) => {
+  let initialLeakCount = result[`leakCount_${currentTabId}`] || 0;
+  chrome.action.setBadgeText({ text: initialLeakCount.toString() });
+});
+
+chrome.storage.onChanged.addListener(function (changes, areaName) {
+  if (changes[`leakCount_${currentTabId}`]) {
+    chrome.action.setBadgeText({
+      text: changes[`leakCount_${currentTabId}`].newValue.toString(),
+    });
+  }
+});
+
 function updateLeakCount(tabId, increment = 0) {
   chrome.storage.local.get([`leakCount_${tabId}`], (result) => {
     leakCount = (result[`leakCount_${tabId}`] || 0) + increment;
     chrome.storage.local.set({ [`leakCount_${tabId}`]: leakCount }, () => {
       console.log(`[Tab ID:${tabId}] Leak count total: ${leakCount}`);
+      chrome.action.setBadgeText({ text: leakCount.toString() });
     });
   });
 }
@@ -35,6 +50,7 @@ function clearStorage() {
   processedUrls.clear();
   chrome.storage.local.clear(() => {
     console.log("Storage cleared.");
+    chrome.action.setBadgeText({ text: "0" });
   });
 }
 

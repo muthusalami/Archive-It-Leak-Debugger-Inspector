@@ -24,10 +24,10 @@ $(document).ready(function () {
     });
   }
 
-  // Update the display when the popup is opened
+  // update the display when the popup is opened
   updateLeakCountDisplay();
 
-  // Optionally, add an event listener for the "Get Snapshot" button
+  // optionally, add an event listener for the "Get Snapshot" button
   $("#whatToCapture").click(function () {
     updateLeakCountDisplay();
   });
