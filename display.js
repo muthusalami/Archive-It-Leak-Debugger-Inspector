@@ -9,12 +9,26 @@ $(function () {
   });
 });
 
-$(function () {
-  chrome.storage.local.get("leakCount", function (result) {
-    var leakCount = result.leakCount || 0;
-    console.log("Leak count retrieved from storage:", leakCount);
+$(document).ready(function () {
+  function updateLeakCountDisplay() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      if (tabs.length > 0) {
+        let tab = tabs[0];
+        let tabId = tab.id;
 
-    // updates span element with the retrieved leak count
-    $("#total").text(leakCount);
+        chrome.storage.local.get([`leakCount_${tabId}`], function (result) {
+          let leakCount = result[`leakCount_${tabId}`] || 0;
+          $("#total").text(leakCount);
+        });
+      }
+    });
+  }
+
+  // Update the display when the popup is opened
+  updateLeakCountDisplay();
+
+  // Optionally, add an event listener for the "Get Snapshot" button
+  $("#whatToCapture").click(function () {
+    updateLeakCountDisplay();
   });
 });
