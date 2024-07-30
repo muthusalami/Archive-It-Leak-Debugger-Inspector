@@ -4,6 +4,7 @@
   "permissions": [
     "activeTab",
     "background",
+    "debugger",
     "declarativeNetRequest",
     "declarativeNetRequestWithHostAccess",
     "downloads",
@@ -11,7 +12,8 @@
     "tabs",
     "scripting",
     "storage",
-    "webRequest"
+    "webRequest",
+    "windows"
   ],
   "host_permissions": ["<all_urls>"],
   "manifest_version": 3,
@@ -28,5 +30,14 @@
   },
   "background": {
     "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }

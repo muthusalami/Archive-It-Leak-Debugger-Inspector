@@ -32,3 +32,12 @@ $(document).ready(function () {
     updateLeakCountDisplay();
   });
 });
+
+document.getElementById("openLogWindow").addEventListener("click", function () {
+  chrome.windows.create({
+    url: "logwindow.html",
+    type: "popup",
+    width: 800,
+    height: 600,
+  });
+});
