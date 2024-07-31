@@ -19,3 +19,45 @@ li {
 #urlDisplay {
   width: 90%;
 }
+
+#logContainer {
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+
+.log {
+  color: black;
+}
+
+.info {
+  color: blue;
+}
+
+.warn {
+  color: orange;
+}
+
+.error {
+  color: red;
+}
+
+.debug {
+  color: purple;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+#logContainer {
+  border: 1px solid #ccc;
+  padding: 10px;
+  height: 300px;
+  overflow-y: scroll;
+  background-color: #f9f9f9;
+}
+
+#logContainer div {
+  padding: 5px;
+  border-bottom: 1px solid #ddd;
+}

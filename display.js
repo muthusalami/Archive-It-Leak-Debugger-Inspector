@@ -33,6 +33,7 @@ $(document).ready(function () {
   });
 });
 
+// opens logwindow.html
 document.getElementById("openLogWindow").addEventListener("click", function () {
   chrome.windows.create({
     url: "logwindow.html",
