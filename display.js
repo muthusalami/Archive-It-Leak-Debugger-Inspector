@@ -36,7 +36,7 @@ $(document).ready(function () {
 // opens logwindow.html
 document.getElementById("openLogWindow").addEventListener("click", function () {
   chrome.windows.create({
-    url: "logwindow.html",
+    url: chrome.runtime.getURL("logwindow.html"),
     type: "popup",
     width: 800,
     height: 600,

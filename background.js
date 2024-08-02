@@ -8,6 +8,23 @@ let currentTabId = null;
 let currentTabUrl = null;
 let webRequestListener = null;
 
+function logMessage(messageType, message) {
+  chrome.runtime.sendMessage({
+    type: "console-message",
+    messageType: messageType,
+    message: message,
+  });
+}
+
+// override console methods to capture messages
+["log", "warn", "error", "info"].forEach((method) => {
+  const originalMethod = console[method];
+  console[method] = function (...args) {
+    logMessage(method, args.join(" "));
+    originalMethod.apply(console, args);
+  };
+});
+
 // initialize storage
 chrome.storage.local.get(["processedUrls"], (result) => {
   const storedUrls = result.processedUrls || [];
@@ -15,12 +32,12 @@ chrome.storage.local.get(["processedUrls"], (result) => {
   console.log("Initialized storage:", { processedUrls });
 });
 
-// function to initialize badge with leak count
+// initialize badge with leak count
 function initializeBadge(tabId) {
   if (tabId !== null) {
     chrome.storage.local.get([`leakCount_${tabId}`], (result) => {
       const initialLeakCount = result[`leakCount_${tabId}`] || 0;
-      chrome.action.setBadgeText({ text: initialLeakCount.toString() });
+      chrome.action.setBadgeText({ text: initialLeakCount.toString(), tabId });
     });
   }
 }
@@ -33,9 +50,12 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (currentTabId !== null && changes[`leakCount_${currentTabId}`]) {
     const newValue = changes[`leakCount_${currentTabId}`].newValue;
     if (newValue !== undefined && newValue !== null) {
-      chrome.action.setBadgeText({ text: newValue.toString() });
+      chrome.action.setBadgeText({
+        text: newValue.toString(),
+        tabId: currentTabId,
+      });
     } else {
-      chrome.action.setBadgeText({ text: "0" });
+      chrome.action.setBadgeText({ text: "0", tabId: currentTabId });
     }
   }
 });
@@ -47,7 +67,7 @@ function updateLeakCount(tabId, increment = 0) {
       leakCount = (result[`leakCount_${tabId}`] || 0) + increment;
       chrome.storage.local.set({ [`leakCount_${tabId}`]: leakCount }, () => {
         console.log(`[Tab ID:${tabId}] Leak count total: ${leakCount}`);
-        chrome.action.setBadgeText({ text: leakCount.toString() });
+        chrome.action.setBadgeText({ text: leakCount.toString(), tabId });
       });
     });
   }
@@ -58,7 +78,7 @@ function resetLeakCount(tabId) {
   if (tabId !== null) {
     chrome.storage.local.set({ [`leakCount_${tabId}`]: 0 }, () => {
       console.log(`[Tab ID:${tabId}] Leak count reset to 0`);
-      chrome.action.setBadgeText({ text: "0" });
+      chrome.action.setBadgeText({ text: "0", tabId });
     });
   }
 }
@@ -91,7 +111,7 @@ function webRequestListenerFunction(details) {
   ) {
     processedUrls.add(details.url);
     saveProcessedUrls();
-    updateLeakCount(currentTabId, 1);
+    updateLeakCount(currentTabId, 1); // Increment the leak count for the current tab
     console.log(
       "Leak detected:",
       details.url,
