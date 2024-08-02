@@ -8,23 +8,6 @@ let currentTabId = null;
 let currentTabUrl = null;
 let webRequestListener = null;
 
-function logMessage(messageType, message) {
-  chrome.runtime.sendMessage({
-    type: "console-message",
-    messageType: messageType,
-    message: message,
-  });
-}
-
-// override console methods to capture messages
-["log", "warn", "error", "info"].forEach((method) => {
-  const originalMethod = console[method];
-  console[method] = function (...args) {
-    logMessage(method, args.join(" "));
-    originalMethod.apply(console, args);
-  };
-});
-
 // initialize storage
 chrome.storage.local.get(["processedUrls"], (result) => {
   const storedUrls = result.processedUrls || [];
@@ -37,7 +20,7 @@ function initializeBadge(tabId) {
   if (tabId !== null) {
     chrome.storage.local.get([`leakCount_${tabId}`], (result) => {
       const initialLeakCount = result[`leakCount_${tabId}`] || 0;
-      chrome.action.setBadgeText({ text: initialLeakCount.toString(), tabId });
+      chrome.action.setBadgeText({ text: initialLeakCount.toString() });
     });
   }
 }
@@ -52,10 +35,9 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     if (newValue !== undefined && newValue !== null) {
       chrome.action.setBadgeText({
         text: newValue.toString(),
-        tabId: currentTabId,
       });
     } else {
-      chrome.action.setBadgeText({ text: "0", tabId: currentTabId });
+      chrome.action.setBadgeText({ text: "0" });
     }
   }
 });
@@ -67,7 +49,7 @@ function updateLeakCount(tabId, increment = 0) {
       leakCount = (result[`leakCount_${tabId}`] || 0) + increment;
       chrome.storage.local.set({ [`leakCount_${tabId}`]: leakCount }, () => {
         console.log(`[Tab ID:${tabId}] Leak count total: ${leakCount}`);
-        chrome.action.setBadgeText({ text: leakCount.toString(), tabId });
+        chrome.action.setBadgeText({ text: leakCount.toString() });
       });
     });
   }
@@ -78,7 +60,7 @@ function resetLeakCount(tabId) {
   if (tabId !== null) {
     chrome.storage.local.set({ [`leakCount_${tabId}`]: 0 }, () => {
       console.log(`[Tab ID:${tabId}] Leak count reset to 0`);
-      chrome.action.setBadgeText({ text: "0", tabId });
+      chrome.action.setBadgeText({ text: "0" });
     });
   }
 }
