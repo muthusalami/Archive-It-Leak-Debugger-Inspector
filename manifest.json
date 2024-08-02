@@ -1,5 +1,5 @@
 {
-  "name": "Archive-It Page Checker",
+  "name": "Archive-It Leak Debugger & Inspector (ALDI)",
   "version": "1.0",
   "permissions": [
     "activeTab",
@@ -17,7 +17,7 @@
   ],
   "host_permissions": ["<all_urls>"],
   "manifest_version": 3,
-  "description": "This is a Chrome extension to QA Archive-It pages on the fly.",
+  "description": "This is a Chrome extension to QA Archive-It Archives on the fly.",
   "options_page": "options.html",
   "icons": {
     "128": "icon128.png",
