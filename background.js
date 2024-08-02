@@ -1,9 +1,7 @@
 console.log("Service worker is running.");
 
-let leakCount = 0;
 let validTabActive = false;
 const processedUrls = new Set();
-const activeTabs = new Set();
 let currentTabId = null;
 let currentTabUrl = null;
 let webRequestListener = null;
@@ -25,9 +23,6 @@ function initializeBadge(tabId) {
   }
 }
 
-// initialize badge with leak count for the current tab
-initializeBadge(currentTabId);
-
 // listen for changes in storage to update the badge
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (currentTabId !== null && changes[`leakCount_${currentTabId}`]) {
@@ -46,10 +41,12 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 function updateLeakCount(tabId, increment = 0) {
   if (tabId !== null) {
     chrome.storage.local.get([`leakCount_${tabId}`], (result) => {
-      leakCount = (result[`leakCount_${tabId}`] || 0) + increment;
+      const leakCount = (result[`leakCount_${tabId}`] || 0) + increment;
       chrome.storage.local.set({ [`leakCount_${tabId}`]: leakCount }, () => {
         console.log(`[Tab ID:${tabId}] Leak count total: ${leakCount}`);
-        chrome.action.setBadgeText({ text: leakCount.toString() });
+        if (tabId === currentTabId) {
+          chrome.action.setBadgeText({ text: leakCount.toString() });
+        }
       });
     });
   }
@@ -60,7 +57,9 @@ function resetLeakCount(tabId) {
   if (tabId !== null) {
     chrome.storage.local.set({ [`leakCount_${tabId}`]: 0 }, () => {
       console.log(`[Tab ID:${tabId}] Leak count reset to 0`);
-      chrome.action.setBadgeText({ text: "0" });
+      if (tabId === currentTabId) {
+        chrome.action.setBadgeText({ text: "0" });
+      }
     });
   }
 }
@@ -69,16 +68,6 @@ function resetLeakCount(tabId) {
 function saveProcessedUrls() {
   chrome.storage.local.set({ processedUrls: Array.from(processedUrls) }, () => {
     console.log("Processed network requests saved to storage");
-  });
-}
-
-// clear storage
-function clearStorage() {
-  leakCount = 0;
-  processedUrls.clear();
-  chrome.storage.local.clear(() => {
-    console.log("Storage cleared.");
-    chrome.action.setBadgeText({ text: "0" });
   });
 }
 
@@ -93,12 +82,12 @@ function webRequestListenerFunction(details) {
   ) {
     processedUrls.add(details.url);
     saveProcessedUrls();
-    updateLeakCount(currentTabId, 1); // Increment the leak count for the current tab
+    updateLeakCount(currentTabId, 1); // update leak count for the current tab
     console.log(
       "Leak detected:",
       details.url,
       "Total leaks for this tab:",
-      leakCount
+      details.tabId
     );
   }
 }
@@ -121,7 +110,7 @@ function manageWebRequestListener(add) {
 
 // get current active tab
 function getCurrentTab() {
-  const queryOptions = { active: true, lastFocusedWindow: true };
+  const queryOptions = { active: true, currentWindow: true };
   chrome.tabs.query(queryOptions, (tabs) => {
     if (chrome.runtime.lastError) {
       console.error(chrome.runtime.lastError);
@@ -135,7 +124,6 @@ function getCurrentTab() {
         console.log(
           `Window ID: ${tab.windowId}, Tab ID: ${tab.id}, Tab URL: ${tab.url}`
         );
-        activeTabs.add(tab.id);
         validTabActive = tab.url.startsWith("https://wayback.archive-it.org/");
         if (!validTabActive) {
           console.log(
@@ -143,13 +131,11 @@ function getCurrentTab() {
               ? "No URL. Please enter a valid Archive-It URL."
               : "Not a valid Archive-It URL."
           );
-          // reset leak count when a valid tab goes to a non-valid URL
-          resetLeakCount(tab.id);
         } else {
           console.log("Valid Archive-It URL. Checking for leaks...");
         }
         // update leak count for the new tab
-        updateLeakCount(tab.id);
+        initializeBadge(tab.id);
       }
     } else {
       validTabActive = false;
@@ -157,43 +143,39 @@ function getCurrentTab() {
   });
 }
 
-// clear storage when a tab is closed
-chrome.tabs.onRemoved.addListener((tabId) => {
-  if (activeTabs.has(tabId)) {
-    activeTabs.delete(tabId);
-    if (activeTabs.size === 0) {
-      clearStorage();
-    }
-  }
-});
-
 // listen for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (
-    changeInfo.status === "loading" &&
-    tab.url.startsWith("https://wayback.archive-it.org/")
-  ) {
-    manageWebRequestListener(false);
-    clearStorage();
-    manageWebRequestListener(true);
-    console.log("Tab refresh detected. Listener re-added and storage cleared.");
+  if (changeInfo.url) {
+    // reset the processed URLs set when the URL changes
+    processedUrls.clear();
+    saveProcessedUrls();
+    if (tab.url.startsWith("https://wayback.archive-it.org/")) {
+      validTabActive = true;
+      manageWebRequestListener(true);
+    } else {
+      validTabActive = false;
+      manageWebRequestListener(false);
+      resetLeakCount(tabId); // reset the leak count if navigating away from a valid URL
+    }
   }
-  if (changeInfo.url || changeInfo.status === "complete") {
+  if (changeInfo.status === "complete") {
     getCurrentTab();
-  }
-  if (
-    changeInfo.url &&
-    !changeInfo.url.startsWith("https://wayback.archive-it.org/")
-  ) {
-    // reset leak count when a valid tab goes to a non-valid URL
-    resetLeakCount(tabId);
   }
 });
 
 // listen for tab activation
-chrome.tabs.onActivated.addListener(() => {
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  currentTabId = activeInfo.tabId;
+  getCurrentTab();
+});
+
+// listen for window focus changes
+chrome.windows.onFocusChanged.addListener(() => {
   getCurrentTab();
 });
 
 // add initial web request listener
 manageWebRequestListener(true);
+
+// initialize badge for the current tab on service worker startup
+getCurrentTab();
