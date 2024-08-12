@@ -9,7 +9,8 @@
         padding: 0;
         height: 100vh;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        justify-content: space-between;
         align-items: center;
       }
       .wrapper {
@@ -32,6 +33,20 @@
       #log {
         white-space: pre-wrap;
       }
+      #openTabButton {
+        margin: 20px;
+        padding: 20px 30px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      #openTabButton:hover {
+        background-color: #0056b3;
+      }
     </style>
   </head>
   <body>
@@ -45,6 +60,7 @@
         <div id="log2"></div>
       </div>
     </div>
+    <button id="openTabButton">Compare Log Messages</button>
     <script src="logwindow.js"></script>
   </body>
 </html>
