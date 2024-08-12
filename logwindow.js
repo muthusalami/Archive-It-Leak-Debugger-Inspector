@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const logDiv = document.getElementById("log", "log2");
+  const logDiv = document.getElementById("log");
   let activeTabId = null;
 
   // create and append log entries
