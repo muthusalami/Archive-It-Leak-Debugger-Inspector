@@ -33,9 +33,23 @@
       #log {
         white-space: pre-wrap;
       }
+      .input-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 20px;
+      }
+      #urlInput {
+        width: 80%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 10px;
+      }
       #openTabButton {
-        margin: 20px;
-        padding: 20px 30px;
+        padding: 10px 20px;
         font-size: 16px;
         cursor: pointer;
         background-color: #007bff;
@@ -60,7 +74,12 @@
         <div id="log2"></div>
       </div>
     </div>
-    <button id="openTabButton">Compare Log Messages</button>
+
+    <div class="input-container">
+      <input type="text" id="urlInput" placeholder="Enter URL here" />
+      <button id="openTabButton">Open Tab and Compare Logs</button>
+    </div>
+
     <script src="logwindow.js"></script>
   </body>
 </html>

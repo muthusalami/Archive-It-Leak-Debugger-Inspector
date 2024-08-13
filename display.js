@@ -39,6 +39,6 @@ document.getElementById("openLogWindow").addEventListener("click", function () {
     url: chrome.runtime.getURL("logwindow.html"),
     type: "popup",
     width: 2400,
-    height: 600,
+    height: 900,
   });
 });
