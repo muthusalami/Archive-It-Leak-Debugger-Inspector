@@ -1,14 +1,4 @@
-$(function () {
-  // chrome extensions API to get the current active tab's URL
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    var activeTab = tabs[0];
-    var currentUrl = activeTab.url;
-
-    // display the URL in the input field
-    $("#urlDisplay").val(currentUrl);
-  });
-});
-
+// leak count function
 $(document).ready(function () {
   function updateLeakCountDisplay() {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -33,12 +23,12 @@ $(document).ready(function () {
   });
 });
 
-// opens logwindow.html
+// launches logwindow.html
 document.getElementById("openLogWindow").addEventListener("click", function () {
   chrome.windows.create({
     url: chrome.runtime.getURL("logwindow.html"),
     type: "popup",
     width: 2400,
-    height: 900,
+    height: 1200,
   });
 });

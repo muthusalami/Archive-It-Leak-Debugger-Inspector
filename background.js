@@ -1,13 +1,15 @@
 console.log("Service worker is running.");
 
-let logs = {};
+let logs = {}; // in-memory logs for quick access
+let attachedTabs = {}; // tracks attached tabs
+let isPopupOpen = false; // tracks popup state
 let validTabActive = false;
 const processedUrls = new Set();
 let currentTabId = null;
 let currentTabUrl = null;
 let webRequestListener = null;
 
-// initialize storage and badge
+// initialize storage and leak count badge
 function initialize() {
   chrome.storage.local.get(["processedUrls"], (result) => {
     const storedUrls = result.processedUrls || [];
@@ -17,7 +19,7 @@ function initialize() {
   getCurrentTab();
 }
 
-// set the badge text
+// set badge text
 function setBadgeText(tabId, text) {
   if (tabId !== null) {
     chrome.action.setBadgeText({ text });
@@ -42,7 +44,7 @@ chrome.storage.onChanged.addListener((changes) => {
   }
 });
 
-// update the leak count for a tab
+// updates the leak count for a tab
 function updateLeakCount(tabId, increment = 0) {
   if (tabId !== null) {
     chrome.storage.local.get([`leakCount_${tabId}`], (result) => {
@@ -87,13 +89,8 @@ function webRequestListenerFunction(details) {
   ) {
     processedUrls.add(details.url);
     saveProcessedUrls();
-    updateLeakCount(currentTabId, 1); // update leak count for the current tab
-    console.log(
-      "Leak detected:",
-      details.url,
-      "Total leaks for this tab:",
-      details.tabId
-    );
+    updateLeakCount(currentTabId, 1); // Update leak count for the current tab
+    console.log("Leak detected:", details.url);
   }
 }
 
@@ -180,78 +177,118 @@ manageWebRequestListener(true);
 // initialize badge for the current tab on service worker startup
 initialize();
 
-// attach debugger when the tab is updated
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.status === "loading") {
-    logs[tabId] = [];
-  }
+// save logs to storage
+function saveLogs(tabId, logData) {
+  chrome.storage.local.get([`logs_${tabId}`], (result) => {
+    const storedLogs = result[`logs_${tabId}`] || [];
+    storedLogs.push(logData);
+    chrome.storage.local.set({ [`logs_${tabId}`]: storedLogs });
+  });
+}
 
-  if (changeInfo.status === "complete") {
+// attach debugger to a specific tab based on the user's selection
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "popupOpened") {
+    isPopupOpen = true;
+    console.log("Popup opened");
+  } else if (request.action === "popupClosed") {
+    isPopupOpen = false;
+    console.log("Popup closed");
+  } else if (request.action === "attachDebugger") {
+    const tabId = request.tabId;
+
+    if (attachedTabs[tabId]) {
+      console.log(`Debugger already attached to tab ${tabId}`);
+      sendResponse({ success: true });
+      return;
+    }
+
     chrome.debugger.attach({ tabId }, "1.3", () => {
       if (chrome.runtime.lastError) {
         console.warn(
           `Failed to attach debugger to tab ${tabId}: ${chrome.runtime.lastError.message}`
         );
+        sendResponse({
+          success: false,
+          error: chrome.runtime.lastError.message,
+        });
         return;
       }
+
+      attachedTabs[tabId] = true; // Mark the tab as attached
 
       chrome.debugger.sendCommand({ tabId }, "Log.enable");
       chrome.debugger.sendCommand({ tabId }, "Runtime.enable");
 
+      // listen for debugger events and log messages
       chrome.debugger.onEvent.addListener((source, method, params) => {
-        let message;
-        if (method === "Log.entryAdded") {
-          message = `[${params.entry.level}] ${params.entry.text}`;
-        } else if (method === "Runtime.consoleAPICalled") {
-          message = `[${params.type}] ${params.args
-            .map((arg) => arg.value)
-            .join(" ")}`;
-        }
-
-        if (message) {
-          console.log(`Tab ${tabId}: ${message}`);
-          if (!logs[tabId]) {
-            logs[tabId] = [];
+        if (source.tabId === tabId) {
+          let message;
+          if (method === "Log.entryAdded") {
+            message = `[${params.entry.level}] ${params.entry.text}`;
+          } else if (method === "Runtime.consoleAPICalled") {
+            message = `[${params.type}] ${params.args
+              .map((arg) => arg.value)
+              .join(" ")}`;
           }
-          logs[tabId].push({ tabId, message });
 
-          // send the log message to the content script
-          chrome.tabs.sendMessage(
-            tabId,
-            { tabId, log: { message } },
-            (response) => {
-              if (chrome.runtime.lastError) {
-                console.warn(
-                  `Failed to send message to tab ${tabId}: ${chrome.runtime.lastError.message}`
-                );
-              }
+          if (message) {
+            console.log(`Tab ${tabId}: ${message}`);
+            if (!logs[tabId]) {
+              logs[tabId] = [];
             }
-          );
+            logs[tabId].push({ tabId, message });
+            saveLogs(tabId, { tabId, message }); // saves logs to storage
+
+            // sends log message to the popup only if it's open
+            if (isPopupOpen) {
+              chrome.runtime.sendMessage(
+                { tabId, log: { message } },
+                (response) => {
+                  if (chrome.runtime.lastError) {
+                    console.warn(
+                      `Failed to send message to popup: ${chrome.runtime.lastError.message}`
+                    );
+                  }
+                }
+              );
+            }
+          }
         }
       });
+
+      sendResponse({ success: true });
     });
+
+    return true; // keeps the message channel open for async response
   }
 });
 
-// handle messages from the content script
+// handle messages to retrieve logs from storage
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getLogs") {
     const tabId = request.tabId;
-    sendResponse(logs[tabId] || []);
+    chrome.storage.local.get([`logs_${tabId}`], (result) => {
+      sendResponse(result[`logs_${tabId}`] || []);
+    });
+    return true;
   }
 });
 
-// detach debugger when the tab is closed
+// removes debugger when the tab is closed
 chrome.tabs.onRemoved.addListener((tabId) => {
-  chrome.debugger.detach({ tabId }, () => {
-    if (chrome.runtime.lastError) {
-      console.warn(
-        `Failed to detach debugger from tab ${tabId}: ${chrome.runtime.lastError.message}`
-      );
-    } else {
-      console.log(`Debugger detached from tab ${tabId}`);
-    }
-  });
-  delete logs[tabId];
-  console.log(`Tab ${tabId} closed and logs cleaned up`);
+  if (attachedTabs[tabId]) {
+    chrome.debugger.detach({ tabId }, () => {
+      if (chrome.runtime.lastError) {
+        console.warn(
+          `Failed to detach debugger from tab ${tabId}: ${chrome.runtime.lastError.message}`
+        );
+      } else {
+        console.log(`Debugger detached from tab ${tabId}`);
+      }
+    });
+    delete logs[tabId];
+    delete attachedTabs[tabId]; // cleans up the attachedTabs object
+    console.log(`Tab ${tabId} closed and logs cleaned up`);
+  }
 });

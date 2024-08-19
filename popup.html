@@ -3,28 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Archive-It Page Checker</title>
-    <link rel="stylesheet" type="text/css" href="style.css" />
-    <script src="jquery-3.7.1.min.js"></script>
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self';"
-    />
+    <title>Archive-It Leak Debugger & Inspector (ALDI)</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <script src="jquery/jquery-3.7.1.min.js"></script>
   </head>
   <body>
-    <input type="text" id="urlDisplay" readonly />
-    <h1>LEAKS: <span id="total">0</span></h1>
-    <div>
-      <input type="checkbox" id="checkboxConsoleLog" value="consoleLog" />
-      Console log<br />
-      <input type="checkbox" id="checkboxHARLog" value="HARLog" /> HAR log<br />
-      <br />
-      <input type="submit" id="whatToCapture" value="Get Snapshot" /><br />
-      <br />
-      <button id="openLeakWindow">Display Leak Log</button><br />
-      <br />
-      <button id="openLogWindow">Display Console Log</button><br />
-    </div>
+    <main>
+      <header>
+        <h1>LEAKS: <span id="total">0</span></h1>
+      </header>
+
+      <section class="buttons">
+        <button id="openLeakWindow" aria-label="Display the leak log">
+          Display Leak Log
+        </button>
+        <button id="openLogWindow" aria-label="Display the console log">
+          Display Console Log
+        </button>
+      </section>
+    </main>
+
+    <footer>
+      <p>Archive-It Leak Debugger & Inspector (ALDI)</p>
+    </footer>
+
     <script src="display.js"></script>
   </body>
 </html>

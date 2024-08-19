@@ -2,67 +2,7 @@
 <html>
   <head>
     <title>Console Logger</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .wrapper {
-        display: flex;
-        width: 90%;
-        max-width: 1600px;
-        margin: 20px auto;
-        gap: 30px;
-      }
-      .container {
-        flex: 1;
-        padding: 20px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        background-color: #f9f9f9;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        overflow-y: auto;
-        max-height: 80vh;
-      }
-      #log {
-        white-space: pre-wrap;
-      }
-      .input-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        margin-bottom: 20px;
-      }
-      #urlInput {
-        width: 80%;
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        margin-bottom: 10px;
-      }
-      #openTabButton {
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-      #openTabButton:hover {
-        background-color: #0056b3;
-        margin-bottom: 20px;
-      }
-    </style>
+    <link rel="stylesheet" type="text/css" href="css/logwindow-style.css" />
   </head>
   <body>
     <div class="wrapper">
@@ -71,14 +11,24 @@
         <div id="log"></div>
       </div>
       <div class="container">
-        <h1>Console Log #2 [Live Site]</h1>
+        <h1>Console Log #2</h1>
         <div id="log2"></div>
       </div>
     </div>
 
-    <div class="input-container">
-      <input type="text" id="urlInput" placeholder="Enter URL here" />
-      <button id="openTabButton">Compare Live Logs</button>
+    <div class="input-wrapper">
+      <div class="input-container centered">
+        <select id="tabDropdown1">
+          <option value="">select a tab</option>
+        </select>
+        <button id="openTabButton1">Load Console Logs</button>
+      </div>
+      <div class="input-container centered">
+        <select id="tabDropdown2">
+          <option value="">select a tab</option>
+        </select>
+        <button id="openTabButton2">Load Console Logs</button>
+      </div>
     </div>
 
     <script src="logwindow.js"></script>
