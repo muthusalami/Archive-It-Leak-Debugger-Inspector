@@ -18,7 +18,7 @@
   ],
   "host_permissions": ["<all_urls>"],
   "manifest_version": 3,
-  "description": "This is a Chrome extension to QA Archive-It Archives on the fly.",
+  "description": "ALDI is a Google Chrome extension that performs QA on Archive-It pages on the fly.",
   "icons": {
     "128": "images/icon128.png",
     "48": "images/icon48.png",
