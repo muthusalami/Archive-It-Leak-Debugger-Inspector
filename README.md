@@ -1,3 +1,3 @@
-# archive-it-checker-extension
+# Archive-It Leak Debugger & Inspector (ALDI)
 
-this is a google chrome extension to perform QA on internet archive's archive-it pages
+ALDI is a Google Chrome extension to perform quality assurance on Internet Archive's Archive-It pages.
