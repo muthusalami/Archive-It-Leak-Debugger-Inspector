@@ -72,9 +72,16 @@ function resetLeakCount(tabId) {
 }
 
 // save processed URLs to storage
-function saveProcessedUrls() {
-  chrome.storage.local.set({ processedUrls: Array.from(processedUrls) }, () => {
-    console.log("Processed network requests saved to storage");
+function saveProcessedUrls(tabId) {
+  chrome.storage.local.get([`processedUrls_${tabId}`], (result) => {
+    const storedUrls = result[`processedUrls_${tabId}`] || [];
+    const combinedUrls = new Set([...storedUrls, ...processedUrls]);
+    chrome.storage.local.set(
+      { [`processedUrls_${tabId}`]: Array.from(combinedUrls) },
+      () => {
+        console.log(`Processed URLs saved to storage for tab ${tabId}`);
+      }
+    );
   });
 }
 
@@ -88,8 +95,8 @@ function webRequestListenerFunction(details) {
     !processedUrls.has(details.url)
   ) {
     processedUrls.add(details.url);
-    saveProcessedUrls();
-    updateLeakCount(currentTabId, 1); // update leak count for the current tab
+    saveProcessedUrls(details.tabId);
+    updateLeakCount(currentTabId, 1);
     console.log("Leak detected:", details.url);
   }
 }
@@ -127,6 +134,7 @@ function getCurrentTab() {
           `Window ID: ${tab.windowId}, Tab ID: ${tab.id}, Tab URL: ${tab.url}`
         );
         validTabActive = tab.url.startsWith("https://wayback.archive-it.org/");
+
         if (!validTabActive) {
           console.log(
             tab.url === "chrome://newtab/"
@@ -135,6 +143,16 @@ function getCurrentTab() {
           );
         } else {
           console.log("Valid Archive-It URL. Checking for leaks...");
+
+          // loads processed URLs for tab from storage
+          chrome.storage.local.get(
+            [`processedUrls_${currentTabId}`],
+            (result) => {
+              processedUrls.clear();
+              const storedUrls = result[`processedUrls_${currentTabId}`] || [];
+              storedUrls.forEach((url) => processedUrls.add(url));
+            }
+          );
         }
         initializeBadge(tab.id);
       }
@@ -147,8 +165,8 @@ function getCurrentTab() {
 // listen for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.url) {
-    processedUrls.clear();
-    saveProcessedUrls();
+    processedUrls.clear(); // clears in-memory URL set
+    chrome.storage.local.set({ [`processedUrls_${tabId}`]: [] }); // clears stored URLs for specific tab
     validTabActive = tab.url.startsWith("https://wayback.archive-it.org/");
     manageWebRequestListener(validTabActive);
     if (!validTabActive) {
@@ -215,7 +233,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return;
       }
 
-      attachedTabs[tabId] = true; // Mark the tab as attached
+      attachedTabs[tabId] = true; // mark the tab as attached
 
       chrome.debugger.sendCommand({ tabId }, "Log.enable");
       chrome.debugger.sendCommand({ tabId }, "Runtime.enable");
