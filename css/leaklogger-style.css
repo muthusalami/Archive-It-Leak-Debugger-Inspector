@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
 
-/* log window body styles */
-body {
+/* leak Logger body styles */
+#leak-logger {
   font-family: "Roboto", sans-serif;
   font-size: 14px;
   line-height: 1.6;
@@ -13,23 +13,26 @@ body {
   justify-content: space-between;
   align-items: center;
 }
-.wrapper {
+
+#leak-logger .wrapper {
   display: flex;
+  flex-direction: column;
   width: 90%;
   max-width: 1600px;
   margin: 20px auto;
-  justify-content: space-around;
-  gap: 30px;
   padding: 20px;
+  gap: 30px;
 }
-.container h1,
-.container h2,
-.container h3,
-.container h4,
-.container h5 {
+
+#leak-logger .container h1,
+#leak-logger .container h2,
+#leak-logger .container h3,
+#leak-logger .container h4,
+#leak-logger .container h5 {
   font-family: "Roboto", sans-serif;
 }
-.container {
+
+#leak-logger .container {
   font-family: monospace;
   flex: 1;
   padding: 20px;
@@ -42,35 +45,37 @@ body {
   overflow-x: hidden;
   word-wrap: break-word;
 }
-.container div {
+
+#leak-logger .container div {
   margin-bottom: 10px;
   padding: 8px;
   border-left: 3px solid #005ea1;
-  white-space: pre-wrap; /* preserve white spaces and line breaks, but wrap text */
-  word-wrap: break-word; /* break long words onto the next line */
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
-#log,
-#log2,
-#leaklog {
+
+#leak-logger #log,
+#leak-logger #log2,
+#leak-logger #leaklog {
   white-space: pre-wrap;
 }
-.input-wrapper {
+
+#leak-logger .input-wrapper {
   display: flex;
-  justify-content: space-around;
-  width: 90%;
-  max-width: 1600px;
+  justify-content: center;
+  width: 100%;
   margin-bottom: 20px;
 }
-.input-container {
+
+#leak-logger .input-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 45%;
   text-align: center;
 }
-#tabDropdown1,
-#tabDropdown2,
-#tabDropdown3 {
+
+#leak-logger #tabDropdown3 {
   width: 100%;
   padding: 10px;
   font-size: 16px;
@@ -78,9 +83,8 @@ body {
   border-radius: 5px;
   margin-bottom: 10px;
 }
-#openTabButton1,
-#openTabButton2,
-#openTabButton3 {
+
+#leak-logger #openTabButton3 {
   padding: 10px 20px;
   padding-bottom: 10px;
   font-size: 16px;
@@ -91,8 +95,7 @@ body {
   border-radius: 5px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-#openTabButton1:hover,
-#openTabButton2:hover,
-#openTabButton3:hover {
+
+#leak-logger #openTabButton3:hover {
   background-color: #4b5e6b;
 }

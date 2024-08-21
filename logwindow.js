@@ -19,11 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const option2 = document.createElement("option");
 
         option1.value = tab.id;
-        option1.textContent = tab.title || tab.url;
+        option1.textContent = `Tab ${tab.id}: ${tab.title}`;
         tabDropdown1.appendChild(option1);
 
         option2.value = tab.id;
-        option2.textContent = tab.title || tab.url;
+        option2.textContent = `Tab ${tab.id}: ${tab.title}`;
         tabDropdown2.appendChild(option2);
       });
     });

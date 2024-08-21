@@ -23,6 +23,18 @@ $(document).ready(function () {
   });
 });
 
+// launches leakwindow.html
+document
+  .getElementById("openLeakWindow")
+  .addEventListener("click", function () {
+    chrome.windows.create({
+      url: chrome.runtime.getURL("leakwindow.html"),
+      type: "popup",
+      width: 2400,
+      height: 1200,
+    });
+  });
+
 // launches logwindow.html
 document.getElementById("openLogWindow").addEventListener("click", function () {
   chrome.windows.create({

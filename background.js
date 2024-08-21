@@ -89,7 +89,7 @@ function webRequestListenerFunction(details) {
   ) {
     processedUrls.add(details.url);
     saveProcessedUrls();
-    updateLeakCount(currentTabId, 1); // Update leak count for the current tab
+    updateLeakCount(currentTabId, 1); // update leak count for the current tab
     console.log("Leak detected:", details.url);
   }
 }
