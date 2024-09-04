@@ -14,15 +14,15 @@ ALDI is a Google Chrome extension that performs quality assurance on Internet Ar
 
 **operation**
 
-![leakcount]({{ site.url }}/images/readme/ui.png)
+![leakcount](/images/readme/ui.png)
 
 1. navigate to an archive-it site. the extension will display the number of leaks as a badge & if any.
 
-![leakurl]({{ site.url }}/images/readme/leakurl.png)
+![leakurl](/images/readme/leakurl.png)
 
 2. the user may investigate the leak URL by clicking on 'Display Leak Log' in the extension menu & selecting the appropriate tab using the drop down menu.
 
-![leakurl]({{ site.url }}/images/readme/compare.png)
+![leakurl](/images/readme/compare.png)
 
 3. the user may also compare console log messages of the archive-it site with the 'live' site, if any, by clicking on 'Display Console Log' in the extension menu. the user will need to load the 'live' site in a separate tab before launching the 'Display Console Log' or by refreshing the 'Display Console Log' popup window with 'CTRL + R' or 'CMD + R'.
 
