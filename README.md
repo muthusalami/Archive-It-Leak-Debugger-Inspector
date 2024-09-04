@@ -30,5 +30,4 @@ ALDI is a Google Chrome extension that performs quality assurance on Internet Ar
 
 **special thanks**
 
-alex dempsey
-jefferson bailey
+alex dempsey & jefferson bailey
