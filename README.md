@@ -1,6 +1,6 @@
 # Archive-It Leak Debugger & Inspector (ALDI) Google Chrome extension
 
-ALDI is a Google Chrome extension that performs quality assurance on Internet Archive's Archive-It pages by providing the user insight on site live leaks & the ability to compare console log messages between the Archive-It site & the 'live' site.
+ALDI is a Google Chrome extension that performs quality assurance on Internet Archive's Archive-It pages by providing the user insight on live leaks of an Archive-It site & the ability to compare console log messages between the Archive-It site & the 'live' site.
 
 **set up**
 
