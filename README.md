@@ -2,7 +2,9 @@
 
 ALDI is a Google Chrome extension that performs quality assurance on Internet Archive's Archive-It pages by providing the user insight on live leaks of an Archive-It site & the ability to compare console log messages between the Archive-It site & the 'live' site.
 
-**set up**
+---
+
+## set up
 
 1. download or clone repo to local machine
 2. import the extension to Google Chrome
@@ -12,7 +14,9 @@ ALDI is a Google Chrome extension that performs quality assurance on Internet Ar
    - select and load the folder that contains the files. note that chrome will only accept folders one level up. you will get a 'could not load manifest' error if you do it two levels up.
    - pin the extension to the browser
 
-**operation**
+---
+
+## operation
 
 <div align="center">
   <img src="/images/readme/ui.png" alt="leakcount"/>
@@ -28,6 +32,8 @@ ALDI is a Google Chrome extension that performs quality assurance on Internet Ar
 
 3. the user may also compare console log messages of the archive-it site with the 'live' site, if any, by clicking on 'Display Console Log' in the extension menu. the user will need to load the 'live' site in a separate tab before launching the 'Display Console Log' or by refreshing the 'Display Console Log' popup window with 'CTRL + R' or 'CMD + R'.
 
-**thank you**
+---
+
+## thank you
 
 alex dempsey & jefferson bailey
