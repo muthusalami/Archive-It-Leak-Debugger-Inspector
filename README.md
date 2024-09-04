@@ -6,11 +6,11 @@ ALDI is a Google Chrome extension that performs quality assurance on Internet Ar
 
 1. download or clone repo to local machine.
 2. import it to Google Chrome
-   a) navigate to 'extensions' and then to 'manage extensions'
-   b) toggle 'developer mode' on at the top right corner
-   c) click on 'load unpacked' at the top left corner
-   d) select and load the folder that contains the files. note that chrome will only accept folders one level up. you will get a 'could not load manifest' error if you do it two levels up.
-   e) pin the extension to the browser
+   - navigate to 'extensions' and then to 'manage extensions'
+   - toggle 'developer mode' on at the top right corner
+   - click on 'load unpacked' at the top left corner
+   - select and load the folder that contains the files. note that chrome will only accept folders one level up. you will get a 'could not load manifest' error if you do it two levels up.
+   - pin the extension to the browser
 
 **operation**
 
