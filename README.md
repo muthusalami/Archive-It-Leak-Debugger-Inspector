@@ -4,7 +4,7 @@ ALDI is a Google Chrome extension that performs quality assurance on Internet Ar
 
 **set up**
 
-1. download or clone repo to local machine.
+1. download or clone repo to local machine
 2. import the extension to Google Chrome
    - navigate to 'extensions' and then to 'manage extensions'
    - toggle 'developer mode' on at the top right corner
