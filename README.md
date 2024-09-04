@@ -28,6 +28,6 @@ ALDI is a Google Chrome extension that performs quality assurance on Internet Ar
 
 3. the user may also compare console log messages of the archive-it site with the 'live' site, if any, by clicking on 'Display Console Log' in the extension menu. the user will need to load the 'live' site in a separate tab before launching the 'Display Console Log' or by refreshing the 'Display Console Log' popup window with 'CTRL + R' or 'CMD + R'.
 
-**special thanks**
+**thank you**
 
 alex dempsey & jefferson bailey
