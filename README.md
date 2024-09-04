@@ -14,7 +14,9 @@ ALDI is a Google Chrome extension that performs quality assurance on Internet Ar
 
 **operation**
 
-![leakcount](/images/readme/ui.png)
+<div align="center">
+  <img src="/images/readme/ui.png" alt="leakcount"/>
+</div>
 
 1. navigate to an archive-it site. the extension will display the number of leaks as a badge & if any.
 
