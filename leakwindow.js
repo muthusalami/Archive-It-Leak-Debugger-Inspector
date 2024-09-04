@@ -10,6 +10,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const option = document.createElement("option");
         option.value = tab.id;
         option.textContent = `Tab ${tab.id}: ${tab.title}`;
+
+        // check tab URL
+        if (tab.url.startsWith("https://wayback.archive-it.org/")) {
+          option.style.backgroundColor = "lightgreen";
+        }
+
         tabDropdown.appendChild(option);
       });
     });

@@ -20,10 +20,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         option1.value = tab.id;
         option1.textContent = `Tab ${tab.id}: ${tab.title}`;
+
+        // check tab url of option1
+        if (tab.url.startsWith("https://wayback.archive-it.org/")) {
+          option1.style.backgroundColor = "lightgreen";
+        }
+
         tabDropdown1.appendChild(option1);
 
         option2.value = tab.id;
         option2.textContent = `Tab ${tab.id}: ${tab.title}`;
+
+        // check tab url of option2
+        if (tab.url.startsWith("https://wayback.archive-it.org/")) {
+          option2.style.backgroundColor = "lightgreen";
+        }
+
         tabDropdown2.appendChild(option2);
       });
     });
