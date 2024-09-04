@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // populate dropdowns with available tabs
   const populateTabDropdowns = () => {
     chrome.tabs.query({}, (tabs) => {
-      console.log("Tabs fetched:", tabs); // Debugging
+      console.log("Tabs fetched:", tabs);
       tabs.forEach((tab) => {
         const option1 = document.createElement("option");
         const option2 = document.createElement("option");
@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // handle the "Load Console Logs" button click for tab 1
   document.getElementById("openTabButton1").addEventListener("click", () => {
     activeTabId1 = parseInt(tabDropdown1.value, 10);
-    console.log(`Selected tab for logDiv1: ${activeTabId1}`); // Debugging
+    console.log(`Selected tab for logDiv1: ${activeTabId1}`);
 
     // sends message to background script to attach debugger
     chrome.runtime.sendMessage(
@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // refresh selected tab
           chrome.tabs.reload(activeTabId1, () => {
             console.log(`Tab ${activeTabId1} refreshed`);
-            requestLogs(activeTabId1, logDiv1); // fetch logs after tab refresh
+            requestLogs(activeTabId1, logDiv1);
           });
         } else {
           console.warn(`Failed to attach debugger: ${response.error}`);
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // refresh selected tab
           chrome.tabs.reload(activeTabId2, () => {
             console.log(`Tab ${activeTabId2} refreshed`);
-            requestLogs(activeTabId2, logDiv2); // fetch logs after tab refresh
+            requestLogs(activeTabId2, logDiv2);
           });
         } else {
           console.warn(`Failed to attach debugger: ${response.error}`);

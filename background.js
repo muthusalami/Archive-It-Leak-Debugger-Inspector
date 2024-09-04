@@ -1,8 +1,8 @@
 console.log("Service worker is running.");
 
-let logs = {}; // in-memory logs for quick access
-let attachedTabs = {}; // tracks attached tabs
-let isPopupOpen = false; // tracks popup state
+let logs = {};
+let attachedTabs = {};
+let isPopupOpen = false;
 let validTabActive = false;
 const processedUrls = new Set();
 let currentTabId = null;
@@ -26,7 +26,7 @@ function setBadgeText(tabId, text) {
   }
 }
 
-// initialize badge with leak count
+// initialize badge
 function initializeBadge(tabId) {
   if (tabId !== null) {
     chrome.storage.local.get([`leakCount_${tabId}`], (result) => {
@@ -36,7 +36,7 @@ function initializeBadge(tabId) {
   }
 }
 
-// listen for storage changes to update the badge
+// badge count update
 chrome.storage.onChanged.addListener((changes) => {
   if (currentTabId !== null && changes[`leakCount_${currentTabId}`]) {
     const newValue = changes[`leakCount_${currentTabId}`].newValue || 0;
@@ -44,7 +44,7 @@ chrome.storage.onChanged.addListener((changes) => {
   }
 });
 
-// updates the leak count for a tab
+// updates the leak count of tab
 function updateLeakCount(tabId, increment = 0) {
   if (tabId !== null) {
     chrome.storage.local.get([`leakCount_${tabId}`], (result) => {
@@ -59,7 +59,7 @@ function updateLeakCount(tabId, increment = 0) {
   }
 }
 
-// reset the leak count for a tab
+// reset the leak count of tab
 function resetLeakCount(tabId) {
   if (tabId !== null) {
     chrome.storage.local.set({ [`leakCount_${tabId}`]: 0 }, () => {
@@ -71,7 +71,7 @@ function resetLeakCount(tabId) {
   }
 }
 
-// save processed URLs to storage
+// save processed URLs
 function saveProcessedUrls(tabId) {
   chrome.storage.local.get([`processedUrls_${tabId}`], (result) => {
     const storedUrls = result[`processedUrls_${tabId}`] || [];
@@ -85,7 +85,7 @@ function saveProcessedUrls(tabId) {
   });
 }
 
-// handle web requests to detect leaks
+// leak detection
 function webRequestListenerFunction(details) {
   const waybackPrefix = "https://wayback.archive-it.org/";
   if (
@@ -165,8 +165,8 @@ function getCurrentTab() {
 // listen for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.url) {
-    processedUrls.clear(); // clears in-memory URL set
-    chrome.storage.local.set({ [`processedUrls_${tabId}`]: [] }); // clears stored URLs for specific tab
+    processedUrls.clear();
+    chrome.storage.local.set({ [`processedUrls_${tabId}`]: [] });
     validTabActive = tab.url.startsWith("https://wayback.archive-it.org/");
     manageWebRequestListener(validTabActive);
     if (!validTabActive) {
@@ -233,7 +233,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return;
       }
 
-      attachedTabs[tabId] = true; // mark the tab as attached
+      attachedTabs[tabId] = true;
 
       chrome.debugger.sendCommand({ tabId }, "Log.enable");
       chrome.debugger.sendCommand({ tabId }, "Runtime.enable");
@@ -256,7 +256,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               logs[tabId] = [];
             }
             logs[tabId].push({ tabId, message });
-            saveLogs(tabId, { tabId, message }); // saves logs to storage
+            saveLogs(tabId, { tabId, message });
 
             // sends log message to the popup only if it's open
             if (isPopupOpen) {
@@ -278,7 +278,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ success: true });
     });
 
-    return true; // keeps the message channel open for async response
+    return true;
   }
 });
 
@@ -306,7 +306,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
       }
     });
     delete logs[tabId];
-    delete attachedTabs[tabId]; // cleans up the attachedTabs object
+    delete attachedTabs[tabId];
     console.log(`Tab ${tabId} closed and logs cleaned up`);
   }
 });
