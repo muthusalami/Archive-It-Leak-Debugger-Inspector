@@ -26,7 +26,7 @@
 
 ![leakurl](/images/readme/compare.png)
 
-1. the user may also compare console log messages of the replay site with the 'live' site, if any, by clicking on 'Display Console Log' in the extension menu. the user will need to load the 'live' site in a separate tab before launching the 'Display Console Log'.
+3. the user may also compare console log messages of the replay site with the 'live' site, if any, by clicking on 'Display Console Log' in the extension menu. the user will need to load the 'live' site in a separate tab before launching the 'Display Console Log'.
 
 ## thank you
 
