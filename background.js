@@ -87,11 +87,16 @@ function saveProcessedUrls(tabId) {
 
 // leak detection
 function webRequestListenerFunction(details) {
-  const waybackPrefix = "https://wayback.archive-it.org/";
+  const prefixes = [
+    "https://wayback.archive-it.org/",
+    "https://partner.archive-it.org/",
+    "https://archive-it.org/",
+  ];
+
   if (
     validTabActive &&
     details.tabId === currentTabId &&
-    !details.url.startsWith(waybackPrefix) &&
+    !prefixes.some((prefix) => details.url.startsWith(prefix)) &&
     !processedUrls.has(details.url)
   ) {
     processedUrls.add(details.url);
