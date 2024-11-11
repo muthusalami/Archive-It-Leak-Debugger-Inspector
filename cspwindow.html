@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CSP Violation Logger</title>
+    <link rel="stylesheet" type="text/css" href="css/leaklogger-style.css" />
+  </head>
+  <body id="leak-logger">
+    <div class="wrapper">
+      <div class="container">
+        <h1>Leak Log</h1>
+        <div id="leaklog"></div>
+      </div>
+
+      <div class="input-wrapper">
+        <div class="input-container centered">
+          <select id="tabDropdown3">
+            <option value="">select a tab</option>
+          </select>
+          <button id="openTabButton3">Display CSP Violation</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="cspwindow.js"></script>
+  </body>
+</html>

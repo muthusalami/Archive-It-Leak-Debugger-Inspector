@@ -10,11 +10,17 @@
   <body>
     <main>
       <header>
-        <h2>LEAKS: <span id="total">0</span></h2>
-        <h2>CSP VIOLATIONS: <span id="CSPtotal">0</span></h2>
+        <h2>LEAKS:</h2>
+        <h2 id="total">0</h2>
+
+        <h2>CSP VIOLATIONS:</h2>
+        <h2 id="CSPtotal">0</h2>
       </header>
 
       <section class="buttons">
+        <button id="openCSPWindow" aria-label="Display the leak log">
+          Display CSP Violations
+        </button>
         <button id="openLeakWindow" aria-label="Display the leak log">
           Display Leak Log
         </button>
