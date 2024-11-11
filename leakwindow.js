@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
         option.value = tab.id;
         option.textContent = `Tab ${tab.id}: ${tab.title}`;
 
-        // check tab URL
+        // highlight tabs that match Archive-It URLs
         if (tab.url.startsWith("https://wayback.archive-it.org/")) {
           option.style.backgroundColor = "lightgreen";
         }
@@ -21,22 +21,23 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // function to display the processed URLs for the selected tab
-  function displayProcessedUrls(tabId) {
-    const storageKey = `processedUrls_${tabId}`;
+  // function to display leaks for the selected tab
+  function displayLeaks(tabId) {
+    const storageKey = `leakedURLs_${tabId}`;
     chrome.storage.local.get([storageKey], function (result) {
-      const processedUrls = result[storageKey] || [];
+      const leakedUrls = result[storageKey] || [];
       leakLogContainer.innerHTML = "";
 
       // display URLs in the leaklog container
-      if (processedUrls.length > 0) {
-        processedUrls.forEach((url) => {
+      if (leakedUrls.length > 0) {
+        leakedUrls.forEach((url) => {
           const listItem = document.createElement("div");
           listItem.textContent = url;
+          listItem.classList.add("leak-item");
           leakLogContainer.appendChild(listItem);
         });
       } else {
-        leakLogContainer.textContent = "No processed URLs found for this tab.";
+        leakLogContainer.textContent = "No leaks found for this tab.";
       }
     });
   }
@@ -45,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function () {
   displayLeaksButton.addEventListener("click", function () {
     const selectedTabId = tabDropdown.value;
     if (selectedTabId) {
-      displayProcessedUrls(parseInt(selectedTabId));
+      displayLeaks(parseInt(selectedTabId));
     } else {
       leakLogContainer.textContent = "Please select a tab.";
     }

@@ -1,24 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>CSP Violation Logger</title>
-    <link rel="stylesheet" type="text/css" href="css/leaklogger-style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSP Violations</title>
+    <link rel="stylesheet" type="text/css" href="css/csplogger-style.css" />
   </head>
-  <body id="leak-logger">
-    <div class="wrapper">
-      <div class="container">
-        <h1>Leak Log</h1>
-        <div id="leaklog"></div>
+  <body id="csp-logger">
+    <div class="tab-container">
+      <!-- Tab buttons -->
+      <div class="tab-buttons">
+        <button type="button" class="tab-link" data-tab="csp-violations">
+          CSP Violations
+        </button>
+        <button type="button" class="tab-link" data-tab="successful-rewrites">
+          Successful Rewrites
+        </button>
+        <button type="button" class="tab-link" data-tab="failed-rewrites">
+          Failed Rewrites
+        </button>
       </div>
 
-      <div class="input-wrapper">
-        <div class="input-container centered">
-          <select id="tabDropdown3">
-            <option value="">select a tab</option>
-          </select>
-          <button id="openTabButton3">Display CSP Violation</button>
-        </div>
+      <!-- Tab content -->
+      <div id="csp-violations" class="tab-content">
+        <h1>CSP Violations</h1>
+        <!-- <p>Content for CSP Violations tab.</p> -->
       </div>
+
+      <div id="successful-rewrites" class="tab-content">
+        <h1>Successful Rewrites</h1>
+        <!-- <p>Content for Successful Rewrites tab.</p> -->
+      </div>
+
+      <div id="failed-rewrites" class="tab-content">
+        <h1>Failed Rewrites</h1>
+        <!-- <p>Content for Failed Rewrites tab.</p> -->
+      </div>
+    </div>
+
+    <div class="input-container centered">
+      <select id="tabDropdown3">
+        <option value="">select a tab</option>
+      </select>
+      <button id="openTabButton3">Load</button>
     </div>
 
     <script src="cspwindow.js"></script>

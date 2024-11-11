@@ -1,305 +1,388 @@
-console.log("Service worker is running.");
+let blockedURIsByTab = {}; // global object to hold blocked URIs by tabId
+let lastURLByTabId = {}; // global object to hold last URL by tabId
+let isPopupOpen = false; // tracks state of logwindow.html
+let attachedTabs = {}; // tracks which tabs have the debugger attached
+let logStorage = {}; // stores console log messages by tabId
+let isCSPRewriteEnabledByTab = {}; // tracks isCSPRewriteEnabled state by tabId and URL
+let successfulLoadsByTab = {};
+let failedLoadsByTab = {};
+let failedLoadCounts = {};
+let leakCountsByTab = {}; // global object to track leak counts by tabId
+let leakedURLsByTab = {}; // global object to store leaked URLs by tabId
+let processedUrlsByTab = {}; // tracks processed URLs to prevent duplicate leaks
+let currentTabId = null; // tracks the active tab ID for leak detection
+let validTabActive = false; // tracks if the current tab is a valid Archive-It tab
 
-let logs = {};
-let attachedTabs = {};
-let isPopupOpen = false;
-let validTabActive = false;
-const processedUrls = new Set();
-let currentTabId = null;
-let currentTabUrl = null;
-let webRequestListener = null;
+// prefixes globally for reuse
+const prefixes = [
+  "https://wayback.archive-it.org/",
+  "https://partner.archive-it.org/",
+  "https://archive-it.org/",
+];
 
-// initialize storage and leak count badge
-function initialize() {
-  chrome.storage.local.get(["processedUrls"], (result) => {
-    const storedUrls = result.processedUrls || [];
-    storedUrls.forEach((url) => processedUrls.add(url));
-    console.log("Initialized storage:", { processedUrls });
-  });
-  getCurrentTab();
-}
-
-// set badge text
-function setBadgeText(tabId, text) {
-  if (tabId !== null) {
-    chrome.action.setBadgeText({ text });
-  }
-}
-
-// initialize badge
-function initializeBadge(tabId) {
-  if (tabId !== null) {
-    chrome.storage.local.get([`leakCount_${tabId}`], (result) => {
-      const initialLeakCount = result[`leakCount_${tabId}`] || 0;
-      setBadgeText(tabId, initialLeakCount.toString());
-    });
-  }
-}
-
-// badge count update
-chrome.storage.onChanged.addListener((changes) => {
-  if (currentTabId !== null && changes[`leakCount_${currentTabId}`]) {
-    const newValue = changes[`leakCount_${currentTabId}`].newValue || 0;
-    setBadgeText(currentTabId, newValue.toString());
-  }
-});
-
-// updates the leak count of tab
-function updateLeakCount(tabId, increment = 0) {
-  if (tabId !== null) {
-    chrome.storage.local.get([`leakCount_${tabId}`], (result) => {
-      const leakCount = (result[`leakCount_${tabId}`] || 0) + increment;
-      chrome.storage.local.set({ [`leakCount_${tabId}`]: leakCount }, () => {
-        console.log(`[Tab ID:${tabId}] Leak count total: ${leakCount}`);
-        if (tabId === currentTabId) {
-          setBadgeText(tabId, leakCount.toString());
-        }
-      });
-    });
-  }
-}
-
-// reset the leak count of tab
-function resetLeakCount(tabId) {
-  if (tabId !== null) {
-    chrome.storage.local.set({ [`leakCount_${tabId}`]: 0 }, () => {
-      console.log(`[Tab ID:${tabId}] Leak count reset to 0`);
-      if (tabId === currentTabId) {
-        setBadgeText(tabId, "0");
-      }
-    });
-  }
-}
-
-// save processed URLs
-function saveProcessedUrls(tabId) {
-  chrome.storage.local.get([`processedUrls_${tabId}`], (result) => {
-    const storedUrls = result[`processedUrls_${tabId}`] || [];
-    const combinedUrls = new Set([...storedUrls, ...processedUrls]);
-    chrome.storage.local.set(
-      { [`processedUrls_${tabId}`]: Array.from(combinedUrls) },
-      () => {
-        console.log(`Processed URLs saved to storage for tab ${tabId}`);
-      }
-    );
-  });
-}
-
-// leak detection
+// web request listener function for leak detection
 function webRequestListenerFunction(details) {
-  const prefixes = [
-    "https://wayback.archive-it.org/",
-    "https://partner.archive-it.org/",
-    "https://archive-it.org/",
-  ];
-
   if (
     validTabActive &&
     details.tabId === currentTabId &&
-    !prefixes.some((prefix) => details.url.startsWith(prefix)) &&
-    !processedUrls.has(details.url)
+    !prefixes.some((prefix) => details.url.startsWith(prefix))
   ) {
-    processedUrls.add(details.url);
-    saveProcessedUrls(details.tabId);
-    updateLeakCount(currentTabId, 1);
-    console.log("Leak detected:", details.url);
+    // Ensure processedUrlsByTab[details.tabId] is initialized as a Set
+    processedUrlsByTab[details.tabId] =
+      processedUrlsByTab[details.tabId] || new Set();
+
+    if (!processedUrlsByTab[details.tabId].has(details.url)) {
+      processedUrlsByTab[details.tabId].add(details.url);
+      saveProcessedUrls(details.tabId);
+      updateLeakCount(details.tabId, 1);
+      console.log("Leak detected:", details.url);
+
+      // Save the leak URL for the current tab
+      leakedURLsByTab[details.tabId] =
+        leakedURLsByTab[details.tabId] || new Set();
+      leakedURLsByTab[details.tabId].add(details.url);
+
+      // Store leak details in local storage
+      chrome.storage.local.set({
+        [`leakedURLs_${details.tabId}`]: Array.from(
+          leakedURLsByTab[details.tabId]
+        ),
+      });
+    }
   }
 }
 
-// manage web request listener
-function manageWebRequestListener(add) {
-  if (add && !webRequestListener) {
-    webRequestListener = webRequestListenerFunction;
-    chrome.webRequest.onHeadersReceived.addListener(
-      webRequestListener,
-      { urls: ["<all_urls>"] },
-      ["responseHeaders"]
-    );
-  } else if (!add && webRequestListener) {
-    chrome.webRequest.onHeadersReceived.removeListener(webRequestListener);
-    console.log("WebRequest listener removed.");
-    webRequestListener = null;
-  }
+// update the leak count for a specific tab
+function updateLeakCount(tabId, increment = 1) {
+  leakCountsByTab[tabId] = (leakCountsByTab[tabId] || 0) + increment;
+
+  // Save the updated leak count in local storage
+  chrome.storage.local.set(
+    { [`leakCount_${tabId}`]: leakCountsByTab[tabId] },
+    () => {
+      console.log(
+        `Updated leak count for tab ${tabId}: ${leakCountsByTab[tabId]}`
+      );
+      updateBadgeForActiveTab();
+    }
+  );
 }
 
-// get current active tab
-function getCurrentTab() {
-  const queryOptions = { active: true, currentWindow: true };
-  chrome.tabs.query(queryOptions, (tabs) => {
-    if (chrome.runtime.lastError) {
-      console.error(chrome.runtime.lastError);
-      return;
+// save processed URLs to local storage for a specific tab
+function saveProcessedUrls(tabId) {
+  const processedUrls = Array.from(processedUrlsByTab[tabId] || []);
+  chrome.storage.local.set(
+    { [`processedUrls_${tabId}`]: processedUrls },
+    () => {
+      console.log(`Processed URLs saved for tab ${tabId}`);
     }
-    if (tabs.length > 0) {
-      const tab = tabs[0];
-      if (tab.id !== currentTabId || tab.url !== currentTabUrl) {
-        currentTabId = tab.id;
-        currentTabUrl = tab.url;
-        console.log(
-          `Window ID: ${tab.windowId}, Tab ID: ${tab.id}, Tab URL: ${tab.url}`
-        );
-        validTabActive = tab.url.startsWith("https://wayback.archive-it.org/");
-
-        if (!validTabActive) {
-          console.log(
-            tab.url === "chrome://newtab/"
-              ? "No URL. Please enter a valid Archive-It URL."
-              : "Not a valid Archive-It URL."
-          );
-        } else {
-          console.log("Valid Archive-It URL. Checking for leaks...");
-
-          // loads processed URLs for tab from storage
-          chrome.storage.local.get(
-            [`processedUrls_${currentTabId}`],
-            (result) => {
-              processedUrls.clear();
-              const storedUrls = result[`processedUrls_${currentTabId}`] || [];
-              storedUrls.forEach((url) => processedUrls.add(url));
-            }
-          );
-        }
-        initializeBadge(tab.id);
-      }
-    } else {
-      validTabActive = false;
-    }
-  });
+  );
 }
 
-// listen for tab updates
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.url) {
-    processedUrls.clear();
-    chrome.storage.local.set({ [`processedUrls_${tabId}`]: [] });
-    validTabActive = tab.url.startsWith("https://wayback.archive-it.org/");
-    manageWebRequestListener(validTabActive);
-    if (!validTabActive) {
-      resetLeakCount(tabId);
-    }
-  }
-  if (changeInfo.status === "complete") {
-    getCurrentTab();
-  }
+// // Badge update to show leak counts
+// function updateBadgeForActiveTab() {
+//   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+//     if (tabs.length > 0) {
+//       const activeTabId = tabs[0].id;
+//       const leakCount = leakCountsByTab[activeTabId] || 0;
+//       chrome.action.setBadgeText({
+//         text: leakCount > 0 ? `${leakCount}` : "",
+//         tabId: activeTabId,
+//       });
+//     }
+//   });
+// }
+
+// reset leaks and processed URLs when a tab is removed
+chrome.tabs.onRemoved.addListener((tabId) => {
+  delete leakCountsByTab[tabId];
+  delete leakedURLsByTab[tabId];
+  delete processedUrlsByTab[tabId]; // Clear only the specific tab's processed URLs
+  chrome.storage.local.remove([
+    `leakCount_${tabId}`,
+    `leakedURLs_${tabId}`,
+    `processedUrls_${tabId}`,
+  ]);
+  console.log(`Tab ${tabId} removed, leak data cleared.`);
 });
 
-// listen for tab activation
+// listener for web requests to detect leaks
+chrome.webRequest.onBeforeRequest.addListener(webRequestListenerFunction, {
+  urls: ["<all_urls>"],
+});
+
+// track the active tab and check if it’s valid for leak detection
 chrome.tabs.onActivated.addListener((activeInfo) => {
   currentTabId = activeInfo.tabId;
-  getCurrentTab();
+  chrome.tabs.get(currentTabId, (tab) => {
+    validTabActive =
+      tab && prefixes.some((prefix) => tab.url.startsWith(prefix));
+    updateBadgeForActiveTab();
+  });
 });
 
-// listen for window focus changes
-chrome.windows.onFocusChanged.addListener(() => {
-  getCurrentTab();
+// listener to retrieve resource leaks for a specific tab
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "getResourceLeaks") {
+    const tabId = message.tabId;
+    console.log(`Received request for resource leaks of Tab ${tabId}`);
+
+    const leakCount = leakCountsByTab[tabId] || 0;
+    const leakedURLs = leakedURLsByTab[tabId]
+      ? Array.from(leakedURLsByTab[tabId])
+      : [];
+
+    console.log(`Leaked URLs for Tab ${tabId}:`, leakedURLs);
+
+    sendResponse({
+      status: "success",
+      tabId: tabId,
+      leakCount: leakCount,
+      leakedURLs: leakedURLs,
+    });
+    return true; // keeps message channel open for async response
+  }
 });
 
-// add initial web request listener
-manageWebRequestListener(true);
+// update badge text with the current CSP violation
+function updateBadgeForActiveTab() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length > 0) {
+      const activeTabId = tabs[0].id;
+      const blockedCount = blockedURIsByTab[activeTabId]
+        ? blockedURIsByTab[activeTabId].size
+        : 0;
 
-// initialize badge for the current tab on service worker startup
-initialize();
-
-// save logs to storage
-function saveLogs(tabId, logData) {
-  chrome.storage.local.get([`logs_${tabId}`], (result) => {
-    const storedLogs = result[`logs_${tabId}`] || [];
-    storedLogs.push(logData);
-    chrome.storage.local.set({ [`logs_${tabId}`]: storedLogs });
+      // update the badge text with the blocked count for the active tab
+      chrome.action.setBadgeText({
+        text: blockedCount > 0 ? blockedCount.toString() : "",
+        tabId: activeTabId,
+      });
+    }
   });
 }
 
-// attach debugger to a specific tab based on the user's selection
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "popupOpened") {
+// utility function to save console  logs
+function saveLogs(tabId, logEntry) {
+  chrome.storage.local.get([`logs_${tabId}`], (result) => {
+    const logs = result[`logs_${tabId}`] || [];
+    logs.push(logEntry);
+    chrome.storage.local.set({ [`logs_${tabId}`]: logs }, () => {
+      console.log(`Logs saved for tab ${tabId}`);
+    });
+  });
+}
+
+// main message listener for handling CSP violations, load failures, and logs
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const tabId = sender.tab ? sender.tab.id : null;
+
+  if (message.type === "cspViolation") {
+    handleCspViolation(message, tabId, sendResponse);
+  } else if (message.type === "loadFailed") {
+    handleLoadFailed(message, tabId, sendResponse);
+  } else if (message.type === "loadSuccessful") {
+    handleLoadSuccessful(message, tabId, sendResponse); // New handler for successful loads
+  } else if (message.action === "attachDebugger") {
+    attachDebugger(message, sendResponse);
+  } else if (message.action === "popupOpened") {
     isPopupOpen = true;
     console.log("Popup opened");
-  } else if (request.action === "popupClosed") {
+  } else if (message.action === "popupClosed") {
     isPopupOpen = false;
     console.log("Popup closed");
-  } else if (request.action === "attachDebugger") {
-    const tabId = request.tabId;
+  } else if (message.action === "getLogs") {
+    getLogsForTab(message, sendResponse);
+  }
+  return true; // keep message channel open for asynchronous responses
+});
 
-    if (attachedTabs[tabId]) {
-      console.log(`Debugger already attached to tab ${tabId}`);
-      sendResponse({ success: true });
+// handle CSP violations
+function handleCspViolation(message, tabId, sendResponse) {
+  const { blockedURI } = message.details;
+
+  if (tabId && blockedURI) {
+    blockedURIsByTab[tabId] = blockedURIsByTab[tabId] || new Set();
+    blockedURIsByTab[tabId].add(blockedURI);
+
+    const blockedCount = blockedURIsByTab[tabId].size;
+    chrome.storage.local.set(
+      { [`blockedCount_${tabId}`]: blockedCount },
+      () => {
+        if (chrome.runtime.lastError) {
+          console.error(`Storage error: ${chrome.runtime.lastError.message}`);
+          sendResponse({
+            status: "error",
+            message: "Failed to store blocked URIs count.",
+          });
+        } else {
+          console.log(
+            `Saved blocked URIs count for tab ${tabId}: ${blockedCount}`
+          );
+
+          // update badge text for the current active tab
+          updateBadgeForActiveTab();
+          sendResponse({ status: "success", tabId, blockedCount });
+        }
+      }
+    );
+  } else {
+    console.error("Error: No blockedURI or tabId provided.");
+    sendResponse({
+      status: "error",
+      message: "No blockedURI or tabId provided.",
+    });
+  }
+}
+
+// handle load successful
+function handleLoadSuccessful(message, tabId, sendResponse) {
+  const { resourceType, resourceURL, status, originalURL } = message;
+
+  console.log(`Successfully loaded ${resourceType}: ${resourceURL}`);
+
+  // initialize an array for this tabId if it doesn't exist
+  successfulLoadsByTab[tabId] = successfulLoadsByTab[tabId] || [];
+
+  // add the successful load details to the tab's array
+  successfulLoadsByTab[tabId].push({
+    resourceType,
+    resourceURL,
+    originalURL,
+    status,
+    timestamp: new Date().toISOString(),
+  });
+
+  // optionally save the updated global object back to Chrome storage for persistence
+  chrome.storage.local.set({ successfulLoadsByTab }, () => {
+    console.log(`Saved successful load for tab ${tabId}:`, {
+      resourceType,
+      resourceURL,
+      originalURL,
+      status,
+    });
+
+    // send confirmation response back to content script
+    sendResponse({ status: "success", tabId, resourceURL });
+  });
+}
+
+// handle load failures
+function handleLoadFailed(message, tabId, sendResponse) {
+  const { resourceType, resourceURL, error, originalURL } = message;
+
+  console.log(
+    `Failed to load ${resourceType} resource: ${resourceURL}. Error: ${error}`
+  );
+
+  // initialize the array if it doesn't exist
+  failedLoadsByTab[tabId] = failedLoadsByTab[tabId] || [];
+  failedLoadCounts[tabId] = (failedLoadCounts[tabId] || 0) + 1;
+
+  // add failure details to the tab's array
+  failedLoadsByTab[tabId].push({
+    resourceType,
+    resourceURL,
+    originalURL,
+    error,
+    timestamp: new Date().toISOString(),
+  });
+
+  // save the updated global object back to Chrome storage for persistence
+  chrome.storage.local.set({ failedLoadsByTab, failedLoadCounts }, () => {
+    console.log(`Saved failed loads and count for tab ${tabId}:`, {
+      resourceType,
+      resourceURL,
+      originalURL,
+      error,
+      failedCount: failedLoadCounts[tabId], // Log the updated count
+    });
+
+    // send a response back to the content script to confirm receipt
+    sendResponse({ status: "received" });
+  });
+}
+
+// attach debugger to the tab
+function attachDebugger(request, sendResponse) {
+  const tabId = request.tabId;
+
+  if (attachedTabs[tabId]) {
+    console.log(`Debugger already attached to tab ${tabId}`);
+    sendResponse({ success: true });
+    return;
+  }
+
+  chrome.debugger.attach({ tabId }, "1.3", () => {
+    if (chrome.runtime.lastError) {
+      console.warn(
+        `Failed to attach debugger to tab ${tabId}: ${chrome.runtime.lastError.message}`
+      );
+      sendResponse({ success: false, error: chrome.runtime.lastError.message });
       return;
     }
 
-    chrome.debugger.attach({ tabId }, "1.3", () => {
-      if (chrome.runtime.lastError) {
-        console.warn(
-          `Failed to attach debugger to tab ${tabId}: ${chrome.runtime.lastError.message}`
-        );
-        sendResponse({
-          success: false,
-          error: chrome.runtime.lastError.message,
-        });
-        return;
-      }
+    attachedTabs[tabId] = true;
+    chrome.debugger.sendCommand({ tabId }, "Log.enable");
+    chrome.debugger.sendCommand({ tabId }, "Runtime.enable");
 
-      attachedTabs[tabId] = true;
+    chrome.debugger.onEvent.addListener((source, method, params) => {
+      if (source.tabId === tabId) {
+        let message = "";
+        if (method === "Log.entryAdded") {
+          message = `[${params.entry.level}] ${params.entry.text}`;
+        } else if (method === "Runtime.consoleAPICalled") {
+          message = `[${params.type}] ${params.args
+            .map((arg) => arg.value)
+            .join(" ")}`;
+        }
 
-      chrome.debugger.sendCommand({ tabId }, "Log.enable");
-      chrome.debugger.sendCommand({ tabId }, "Runtime.enable");
+        if (message) {
+          console.log(`Tab ${tabId}: ${message}`);
+          logStorage[tabId] = logStorage[tabId] || [];
+          logStorage[tabId].push({ tabId, message });
+          saveLogs(tabId, { tabId, message });
 
-      // listen for debugger events and log messages
-      chrome.debugger.onEvent.addListener((source, method, params) => {
-        if (source.tabId === tabId) {
-          let message;
-          if (method === "Log.entryAdded") {
-            message = `[${params.entry.level}] ${params.entry.text}`;
-          } else if (method === "Runtime.consoleAPICalled") {
-            message = `[${params.type}] ${params.args
-              .map((arg) => arg.value)
-              .join(" ")}`;
-          }
-
-          if (message) {
-            console.log(`Tab ${tabId}: ${message}`);
-            if (!logs[tabId]) {
-              logs[tabId] = [];
-            }
-            logs[tabId].push({ tabId, message });
-            saveLogs(tabId, { tabId, message });
-
-            // sends log message to the popup only if it's open
-            if (isPopupOpen) {
-              chrome.runtime.sendMessage(
-                { tabId, log: { message } },
-                (response) => {
-                  if (chrome.runtime.lastError) {
-                    console.warn(
-                      `Failed to send message to popup: ${chrome.runtime.lastError.message}`
-                    );
-                  }
-                }
-              );
-            }
+          if (isPopupOpen) {
+            chrome.runtime.sendMessage({ tabId, log: { message } });
           }
         }
-      });
-
-      sendResponse({ success: true });
+      }
     });
 
-    return true;
+    sendResponse({ success: true });
+  });
+}
+
+// get logs for the specified tab
+function getLogsForTab(request, sendResponse) {
+  const tabId = request.tabId;
+  chrome.storage.local.get([`logs_${tabId}`], (result) => {
+    sendResponse(result[`logs_${tabId}`] || []);
+  });
+}
+
+// listen for tab activation to update the badge for the active tab
+chrome.tabs.onActivated.addListener(updateBadgeForActiveTab);
+
+// listen for tab updates (e.g., navigation) to reset badge if necessary
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === "complete" && tab.active) {
+    updateBadgeForActiveTab();
   }
 });
 
-// handle messages to retrieve logs from storage
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "getLogs") {
-    const tabId = request.tabId;
-    chrome.storage.local.get([`logs_${tabId}`], (result) => {
-      sendResponse(result[`logs_${tabId}`] || []);
-    });
-    return true;
-  }
+// initial call to update the badge when the extension is loaded
+updateBadgeForActiveTab();
+
+// when tabs are created, do:
+chrome.tabs.onCreated.addListener((tab) => {
+  chrome.storage.local.set({ cspRewriteEnabled: false });
 });
 
-// removes debugger when the tab is closed
+// when tabs are removed, do:
 chrome.tabs.onRemoved.addListener((tabId) => {
+  // check and detach debugger if attached
   if (attachedTabs[tabId]) {
     chrome.debugger.detach({ tabId }, () => {
       if (chrome.runtime.lastError) {
@@ -310,8 +393,116 @@ chrome.tabs.onRemoved.addListener((tabId) => {
         console.log(`Debugger detached from tab ${tabId}`);
       }
     });
-    delete logs[tabId];
     delete attachedTabs[tabId];
-    console.log(`Tab ${tabId} closed and logs cleaned up`);
+  }
+
+  // clean up stored logs and blocked URIs for the tab
+  delete logStorage[tabId];
+  delete blockedURIsByTab[tabId];
+  delete lastURLByTabId[tabId];
+  delete isCSPRewriteEnabledByTab[tabId];
+  delete successfulLoadsByTab[tabId];
+  delete failedLoadsByTab[tabId];
+  delete failedLoadCounts[tabId];
+
+  // clear any local storage entries tied to the tab
+  chrome.storage.local.remove(
+    [`logs_${tabId}`, `blockedCount_${tabId}`],
+    () => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          `Error clearing storage for tab ${tabId}: ${chrome.runtime.lastError.message}`
+        );
+      } else {
+        console.log(`Storage cleared for tab ${tabId}`);
+      }
+    }
+  );
+
+  // reset CSP rewrite state for this tab
+  chrome.storage.local.set({ [`cspRewriteEnabled_${tabId}`]: false }, () => {
+    console.log(`CSP rewrite state reset for tab ${tabId}`);
+  });
+
+  console.log(`Tab ${tabId} removed, all associated data cleaned up.`);
+});
+
+chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+  if (removeInfo.isWindowClosing) return;
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length > 0 && tabs[0].id === tabId) {
+      // Clear badge if the active tab with violations is closed
+      chrome.action.setBadgeText({ text: "" });
+    }
+  });
+});
+
+// listens for incoming message and instructs logic in content.js
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.action === "CSP_REWRITE_ENABLED") {
+    console.log("CSP rewrite enabled");
+
+    // send message to content script to enable CSP rewrite and reload the page
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, { action: "ENABLE_CSP_REWRITE" });
+    });
+  } else if (request.action === "CSP_REWRITE_DISABLED") {
+    console.log("CSP rewrite disabled");
+
+    // send message to content script to disable CSP rewrite and reload the page
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, { action: "DISABLE_CSP_REWRITE" });
+    });
+  }
+});
+
+// listens for navigation events to reset CSP violation count and clear blocked URIs
+chrome.webNavigation.onCommitted.addListener(function (details) {
+  const tabId = details.tabId;
+  const newURL = details.url;
+
+  // check if the new URL is from a different domain or a non-monitored site
+  if (!newURL.startsWith("https://wayback.archive-it.org/")) {
+    // reset the CSP violation count and clear blocked URIs for this tab
+    chrome.storage.local.remove([`blockedCount_${tabId}`], () => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          `Error resetting blockedCount for tab ${tabId}: ${chrome.runtime.lastError.message}`
+        );
+      } else {
+        console.log(`CSP violation count reset for tab ${tabId}`);
+        blockedURIsByTab[tabId] = new Set(); // clear the in-memory blocked URIs
+      }
+    });
+  }
+
+  // optionally, update the last URL visited for this tab
+  lastURLByTabId[tabId] = newURL;
+});
+
+// listener to get CSP violations for the selected tab
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "getCSPViolations") {
+    const tabId = message.tabId;
+    console.log(`Received request for CSP violations of Tab ${tabId}`);
+
+    chrome.storage.local.get([`blockedCount_${tabId}`], (result) => {
+      const blockedCount = result[`blockedCount_${tabId}`] || 0;
+      const blockedURIs = blockedURIsByTab[tabId]
+        ? Array.from(blockedURIsByTab[tabId])
+        : [];
+
+      console.log(`Blocked URIs for Tab ${tabId}:`, blockedURIs);
+
+      sendResponse({
+        status: "success",
+        tabId: tabId,
+        blockedCount: blockedCount,
+        blockedURIs: blockedURIs,
+      });
+    });
+
+    return true; // keeps message channel open for async response
   }
 });
