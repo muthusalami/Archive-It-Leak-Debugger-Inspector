@@ -1,7 +1,7 @@
 {
-  "name": "CSP detector + rewrite",
-  "description": "CSP detector + rewrite",
-  "version": "1.0",
+  "name": "Archive-It Leak Debugger & Inspector (ALDI)",
+  "description": "ALDI is a Google Chrome extension that performs QA on Archive-It replays on the fly.",
+  "version": "2.0",
   "manifest_version": 3,
   "permissions": [
     "activeTab",
