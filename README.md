@@ -18,22 +18,22 @@
   <img src="/images/readme/ui_2.png" alt="leakcount"/>
 </div>
 
-1. navigate to an archive-it replay site in the browser. the extension will display the number of CSP violations and/or leaks as a badge, if any.
+3. navigate to an archive-it replay site in the browser. the extension will display the number of CSP violations and/or leaks as a badge, if any.
 
 ![leakurl](/images/readme/cspviolations.png)
 ![leakurl](/images/readme/leakurl.png)
 
-2. the user may investigate the CSP violations and/or leaks by clicking on 'CSP Violations' or 'Leak Log' in the extension menu & selecting the desired tab in the drop down menu.
+4. the user may investigate the CSP violations and/or leaks by clicking on 'CSP Violations' or 'Leak Log' in the extension menu & selecting the desired tab in the drop down menu.
 
 <div align="center">
   <img src="/images/readme/csp_switch.png" alt="toggle"/>
 </div>
 
-1. the extension also allows the user to rewrite the CSP violations by toggling on the 'REWRITE CSP' switch.
+5. the extension also allows the user to rewrite the CSP violations by toggling on the 'REWRITE CSP' switch.
 
 ![leakurl](/images/readme/compare.png)
 
-1. the user may also compare console log messages of the replay site with the 'live' site, if any, by clicking on 'Display Console Log' in the extension menu. the user will need to load the 'live' site in a separate tab before launching the 'Display Console Log'.
+6. the user may also compare console log messages of the replay site with the 'live' site, if any, by clicking on 'Display Console Log' in the extension menu. the user will need to load the 'live' site in a separate tab before launching the 'Display Console Log'.
 
 ## thank you
 
