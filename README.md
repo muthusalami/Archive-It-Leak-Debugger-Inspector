@@ -1,6 +1,6 @@
 # Archive-It Leak Debugger & Inspector (ALDI)
 
-**ALDI** is a Google Chrome extension that performs quality assurance on Internet Archive's Archive-It replay pages by 1) detecting + rewriting CSP violations 2) providing the user insight on live leaks of a replay site & 3) allowing the user to compare console log messages between the replay & the 'live' site.
+**ALDI** is a Google Chrome extension that performs quality assurance on Internet Archive's Archive-It replay pages by 1) detecting + rewriting CSP violations, 2) providing the user insight on live leaks of a replay site, & 3) allowing the user to compare console log messages between the replay & the 'live' site.
 
 ## set up
 
