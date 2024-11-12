@@ -27,7 +27,7 @@ function webRequestListenerFunction(details) {
     details.tabId === currentTabId &&
     !prefixes.some((prefix) => details.url.startsWith(prefix))
   ) {
-    // Ensure processedUrlsByTab[details.tabId] is initialized as a Set
+    // ensure processedUrlsByTab[details.tabId] is initialized as a Set
     processedUrlsByTab[details.tabId] =
       processedUrlsByTab[details.tabId] || new Set();
 
@@ -37,12 +37,12 @@ function webRequestListenerFunction(details) {
       updateLeakCount(details.tabId, 1);
       console.log("Leak detected:", details.url);
 
-      // Save the leak URL for the current tab
+      // save the leak URL for the current tab
       leakedURLsByTab[details.tabId] =
         leakedURLsByTab[details.tabId] || new Set();
       leakedURLsByTab[details.tabId].add(details.url);
 
-      // Store leak details in local storage
+      // store leak details in local storage
       chrome.storage.local.set({
         [`leakedURLs_${details.tabId}`]: Array.from(
           leakedURLsByTab[details.tabId]
@@ -56,7 +56,7 @@ function webRequestListenerFunction(details) {
 function updateLeakCount(tabId, increment = 1) {
   leakCountsByTab[tabId] = (leakCountsByTab[tabId] || 0) + increment;
 
-  // Save the updated leak count in local storage
+  // save the updated leak count in local storage
   chrome.storage.local.set(
     { [`leakCount_${tabId}`]: leakCountsByTab[tabId] },
     () => {
@@ -79,7 +79,7 @@ function saveProcessedUrls(tabId) {
   );
 }
 
-// // Badge update to show leak counts
+// // badge update to show leak counts
 // function updateBadgeForActiveTab() {
 //   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
 //     if (tabs.length > 0) {
@@ -97,7 +97,7 @@ function saveProcessedUrls(tabId) {
 chrome.tabs.onRemoved.addListener((tabId) => {
   delete leakCountsByTab[tabId];
   delete leakedURLsByTab[tabId];
-  delete processedUrlsByTab[tabId]; // Clear only the specific tab's processed URLs
+  delete processedUrlsByTab[tabId]; // clear only the specific tab's processed URLs
   chrome.storage.local.remove([
     `leakCount_${tabId}`,
     `leakedURLs_${tabId}`,
@@ -182,7 +182,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.type === "loadFailed") {
     handleLoadFailed(message, tabId, sendResponse);
   } else if (message.type === "loadSuccessful") {
-    handleLoadSuccessful(message, tabId, sendResponse); // New handler for successful loads
+    handleLoadSuccessful(message, tabId, sendResponse);
   } else if (message.action === "attachDebugger") {
     attachDebugger(message, sendResponse);
   } else if (message.action === "popupOpened") {
@@ -432,7 +432,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs.length > 0 && tabs[0].id === tabId) {
-      // Clear badge if the active tab with violations is closed
+      // clear badge if the active tab with violations is closed
       chrome.action.setBadgeText({ text: "" });
     }
   });

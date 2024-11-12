@@ -1,6 +1,6 @@
-# Archive-It Leak Debugger & Inspector (ALDI) Google Chrome extension
+# Archive-It Leak Debugger & Inspector (ALDI)
 
-**ALDI** is a Google Chrome extension that performs quality assurance on Internet Archive's Archive-It replay pages by 1) providing the user insight on live leaks of a replay site & 2) the ability to compare console log messages between the replay & the 'live' site.
+**ALDI** is a Google Chrome extension that performs quality assurance on Internet Archive's Archive-It replay pages by 1) detecting + rewriting CSP violations 2) providing the user insight on live leaks of a replay site & 3) allowing the user to compare console log messages between the replay & the 'live' site.
 
 ## set up
 
@@ -18,15 +18,20 @@
   <img src="/images/readme/ui.png" alt="leakcount"/>
 </div>
 
-1. navigate to an archive-it replay site in the browser. the extension will display the number of leaks as a badge, if any.
+1. navigate to an archive-it replay site in the browser. the extension will display the number of CSP violations and/or leaks as a badge, if any.
 
+![leakurl](/images/readme/cspviolations.png)
 ![leakurl](/images/readme/leakurl.png)
 
-2. the user may investigate the leak URL by clicking on 'Display Leak Log' in the extension menu & selecting the desired tab using the drop down menu.
+2. the user may investigate the CSP violations and/or leaks by clicking on 'CSP Violations' or 'Leak Log' in the extension menu & selecting the desired tab in the drop down menu.
+
+![leakurl](/images/readme/csp_switch.png)
+
+3. the extension also allows the user to rewrite the CSP violations by toggling on the 'REWRITE CSP' switch.
 
 ![leakurl](/images/readme/compare.png)
 
-3. the user may also compare console log messages of the replay site with the 'live' site, if any, by clicking on 'Display Console Log' in the extension menu. the user will need to load the 'live' site in a separate tab before launching the 'Display Console Log'.
+1. the user may also compare console log messages of the replay site with the 'live' site, if any, by clicking on 'Display Console Log' in the extension menu. the user will need to load the 'live' site in a separate tab before launching the 'Display Console Log'.
 
 ## thank you
 

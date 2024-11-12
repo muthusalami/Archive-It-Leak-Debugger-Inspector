@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadFailedRewrites = (tabId) => {
     chrome.storage.local.get({ failedLoadsByTab: {} }, (result) => {
       const failedLoadsByTab = result.failedLoadsByTab || {};
-      const tabFailedLoads = failedLoadsByTab[tabId] || []; // Get the array of failed loads for this tab
+      const tabFailedLoads = failedLoadsByTab[tabId] || [];
 
       failedRewritesDiv.innerHTML = `<h2>Failed Rewrites for Tab ${tabId}</h2>`;
 
