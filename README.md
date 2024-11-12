@@ -15,7 +15,7 @@
 ## operation
 
 <div align="center">
-  <img src="/images/readme/ui.png" alt="leakcount"/>
+  <img src="/images/readme/ui_2.png" alt="leakcount"/>
 </div>
 
 1. navigate to an archive-it replay site in the browser. the extension will display the number of CSP violations and/or leaks as a badge, if any.
@@ -25,9 +25,11 @@
 
 2. the user may investigate the CSP violations and/or leaks by clicking on 'CSP Violations' or 'Leak Log' in the extension menu & selecting the desired tab in the drop down menu.
 
-![leakurl](/images/readme/csp_switch.png)
+<div align="center">
+  <img src="/images/readme/csp_switch.png" alt="toggle"/>
+</div>
 
-3. the extension also allows the user to rewrite the CSP violations by toggling on the 'REWRITE CSP' switch.
+1. the extension also allows the user to rewrite the CSP violations by toggling on the 'REWRITE CSP' switch.
 
 ![leakurl](/images/readme/compare.png)
 
