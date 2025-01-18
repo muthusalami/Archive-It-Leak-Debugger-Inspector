@@ -149,16 +149,46 @@ function updateBadgeForActiveTab() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs.length > 0) {
       const activeTabId = tabs[0].id;
-      const blockedCount = blockedURIsByTab[activeTabId]
-        ? blockedURIsByTab[activeTabId].size
-        : 0;
 
-      // update the badge text with the blocked count for the active tab
-      chrome.action.setBadgeText({
-        text: blockedCount > 0 ? blockedCount.toString() : "",
-        tabId: activeTabId,
+      // retrieve both leak count and CSP violation count
+      Promise.all([
+        getLeakCount(activeTabId),
+        getCSPViolationCount(activeTabId),
+      ]).then(([leakCount, blockedCount]) => {
+        // combine counts into "leaks / violations"
+        const badgeText = `${leakCount}/${blockedCount}`;
+
+        // set badge text
+        chrome.action.setBadgeText({
+          text: leakCount > 0 || blockedCount > 0 ? badgeText : "",
+          tabId: activeTabId,
+        });
+
+        // set color of badge background
+        chrome.action.setBadgeBackgroundColor({
+          color: leakCount > 0 || blockedCount > 0 ? "red" : "green",
+          tabId: activeTabId,
+        });
       });
     }
+  });
+}
+
+// get leak count
+function getLeakCount(tabId) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([`leakCount_${tabId}`], (result) => {
+      resolve(result[`leakCount_${tabId}`] || 0); // default to 0 if not found
+    });
+  });
+}
+
+// get CSP violation count
+function getCSPViolationCount(tabId) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([`blockedCount_${tabId}`], (result) => {
+      resolve(result[`blockedCount_${tabId}`] || 0); // default to 0 if not found
+    });
   });
 }
 
