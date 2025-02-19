@@ -16,21 +16,47 @@ function loadToggleState() {
     }
   });
 }
-
 // listen for CSP violations and store the details in background.js
 document.addEventListener("securitypolicyviolation", (event) => {
   if (window.location.href.startsWith("https://wayback.archive-it.org/")) {
+    // Extract resource name (last part of the URL) if available
+    let resourceName = "Unknown";
+    if (event.blockedURI) {
+      try {
+        const url = new URL(event.blockedURI);
+        resourceName = url.pathname.split("/").pop() || url.pathname;
+      } catch (e) {
+        resourceName = event.blockedURI; // Keep it as is if not a valid URL
+      }
+    }
+
+    // infer resource type based on the violated directive
+    let resourceType = "Unknown";
+    if (event.violatedDirective.includes("script-src")) {
+      resourceType = "Script";
+    } else if (event.violatedDirective.includes("style-src")) {
+      resourceType = "Stylesheet";
+    } else if (event.violatedDirective.includes("img-src")) {
+      resourceType = "Image";
+    } else if (event.violatedDirective.includes("font-src")) {
+      resourceType = "Font";
+    } else if (event.violatedDirective.includes("media-src")) {
+      resourceType = "Media";
+    } else if (event.violatedDirective.includes("connect-src")) {
+      resourceType = "XHR/Fetch";
+    } else if (event.violatedDirective.includes("frame-src")) {
+      resourceType = "Frame";
+    }
+
     const violationDetails = {
+      resourceName: resourceName,
+      documentURI: event.documentURI,
       blockedURI: event.blockedURI || "Inline or eval resource",
       violatedDirective: event.violatedDirective,
-      documentURI: event.documentURI,
+      resourceType: resourceType,
     };
 
-    console.log(
-      "CSP violation detected:",
-      violationDetails.blockedURI,
-      violationDetails
-    );
+    console.log("CSP violation detected:", violationDetails);
 
     // send CSP violation details to background.js for tracking
     sendMessageToBackground({

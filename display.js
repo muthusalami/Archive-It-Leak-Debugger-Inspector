@@ -169,3 +169,34 @@ document.getElementById("openLogWindow").addEventListener("click", () => {
 document.getElementById("openCspWindow").addEventListener("click", () => {
   createPopupWindow("cspwindow.html");
 });
+
+document.getElementById("openRuleWindow").addEventListener("click", () => {
+  createPopupWindow("rulewindow.html");
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  let ruleTotalElement = document.getElementById("ruletotal");
+
+  // Get active tab ID
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    if (tabs.length === 0) return;
+    let tabId = tabs[0].id;
+
+    // Fetch stored rule count for the active tab
+    chrome.storage.local.get([`triggeredRules_${tabId}`], function (result) {
+      let triggeredRules = result[`triggeredRules_${tabId}`] || [];
+
+      // Convert stored JSON strings to objects (if using JSON.stringify for storage)
+      let ruleEntries = triggeredRules.map(JSON.parse);
+
+      // Generate displayable rule list
+      if (ruleEntries.length > 0) {
+        ruleTotalElement.innerHTML = ruleEntries
+          .map((entry) => `${entry.url} → <strong>${entry.policy}</strong>`)
+          .join("<br>");
+      } else {
+        ruleTotalElement.innerHTML = "No triggered rules.";
+      }
+    });
+  });
+});

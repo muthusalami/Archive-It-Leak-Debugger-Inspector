@@ -15,6 +15,9 @@
 
         <h2>CSP VIOLATIONS:</h2>
         <h2 id="CSPtotal">0</h2>
+
+        <h2>POLICIES:</h2>
+        <p id="ruletotal"></p>
       </header>
 
       <div class="switch-container">
@@ -26,8 +29,11 @@
       </div>
 
       <section class="buttons">
-        <button id="openCspWindow" aria-label="Display the leak log">
+        <button id="openCspWindow" aria-label="Display the csp violations">
           CSP Violations
+        </button>
+        <button id="openRuleWindow" aria-label="Display Rules">
+          Rule Check
         </button>
         <button id="openLeakWindow" aria-label="Display the leak log">
           Leak Log
